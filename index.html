@@ -807,30 +807,60 @@ document.getElementById('dataAssinatura').valueAsDate = new Date();
 // Gerar assinatura cursiva da Caroline (CONTRATADA)
 function generateCarolineSig() {
   const c = document.createElement('canvas');
-  c.width = 420; c.height = 110;
+  c.width = 500; c.height = 140;
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, c.width, c.height);
 
-  // Sombra suave
-  ctx.shadowColor = 'rgba(0,0,0,0.08)';
-  ctx.shadowBlur = 2;
-  ctx.shadowOffsetY = 1;
+  // Sombra delicada
+  ctx.shadowColor = 'rgba(15,70,56,0.13)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
 
-  // Nome principal em cursiva
-  ctx.font = "italic 46px 'Brush Script MT', 'Dancing Script', cursive";
+  // "C" maiúsculo floreado — traço inicial decorativo
+  ctx.beginPath();
+  ctx.moveTo(18, 38);
+  ctx.bezierCurveTo(6, 22, 2, 8, 22, 4);
+  ctx.bezierCurveTo(38, 1, 52, 10, 46, 22);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Letra principal "Carol" estilo caligrafia de casamento
+  ctx.shadowBlur = 3;
+  ctx.font = "italic 58px 'Brush Script MT', 'Segoe Script', cursive";
   ctx.fillStyle = '#1a1a2e';
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Caroline Pinto', 12, 52);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Carol', 14, 90);
 
-  // Sublinhado elegante
+  // Floreado inferior — traço que sai do final do "l"
   ctx.shadowBlur = 0;
   ctx.beginPath();
-  ctx.moveTo(10, 78);
-  ctx.bezierCurveTo(80, 72, 200, 82, 310, 76);
+  // medida do texto para posicionar o floreado
+  const w = ctx.measureText('Carol').width;
+  ctx.moveTo(14 + w - 4, 88);
+  ctx.bezierCurveTo(14 + w + 18, 82, 14 + w + 40, 102, 14 + w + 24, 112);
+  ctx.bezierCurveTo(14 + w + 10, 120, 14 + w - 10, 116, 14 + w + 4, 108);
   ctx.strokeStyle = '#1a1a2e';
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = 'round';
   ctx.stroke();
+
+  // Sublinhado ondulado elegante embaixo do nome
+  ctx.beginPath();
+  ctx.moveTo(10, 104);
+  ctx.bezierCurveTo(50, 98, 120, 112, 200, 106);
+  ctx.bezierCurveTo(260, 101, 300, 110, 14 + w + 10, 107);
+  ctx.strokeStyle = 'rgba(15,110,86,0.35)';
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+
+  // Pontinho decorativo no início (floreado inicial)
+  ctx.beginPath();
+  ctx.arc(8, 92, 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(15,110,86,0.3)';
+  ctx.fill();
 
   window._carolineSig = c.toDataURL();
 }
