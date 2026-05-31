@@ -486,9 +486,10 @@ ${p.pros.map(s => `<li>${s}</li>`).join('')}
 ${isTeste ? `
 <div class="highlight">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo ao CONTRATANTE. Ao final do período de teste, o CONTRATANTE poderá optar por continuar com a contratação mensal ou encerrar sem ônus.</div>
 <p><strong>Valor mensal após o período de teste:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
+<div class="highlight">⚠️ <strong>Taxa de implantação (setup):</strong> Caso o CONTRATANTE opte pela contratação mensal após o período de teste, será cobrada uma taxa única de <strong>R$ 400,00</strong> na ativação do plano. Este valor cobre o onboarding completo, configuração do roteiro personalizado e integração com a agenda da clínica. A taxa <strong>não é cobrada durante o período de teste</strong>.</div>
 ` : `
 <p><strong>Valor mensal:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
-<p><strong>Taxa de setup (implantação):</strong> R$ 400,00 — pagamento único na ativação.</p>
+<p><strong>Taxa de setup (implantação):</strong> R$ 400,00 — pagamento único na ativação. Inclui onboarding completo e roteiro personalizado.</p>
 `}
 <p>O pagamento será realizado mensalmente, via Pix, boleto ou cartão de crédito, com vencimento no dia de início de cada ciclo.</p>
 
