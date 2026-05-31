@@ -207,19 +207,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ── SENHA LOCAL (troque para a sua) ──────────────────────────
 const SENHA_ADMIN = 'minharecepcionista2025';
-
 let todosContratos = [];
 let contratoAtual = null;
 
+// ── HELPERS ──────────────────────────────────────────────────
+function show(id)  { document.getElementById(id).style.display = 'block'; }
+function hide(id)  { document.getElementById(id).style.display = 'none'; }
+function flex(id)  { document.getElementById(id).style.display = 'flex'; }
+function text(id, v){ document.getElementById(id).textContent = v; }
+
 // ── LOGIN ────────────────────────────────────────────────────
-window.entrar = function() {
+function entrar() {
   const senha = document.getElementById('senhaInput').value;
   if (senha === SENHA_ADMIN) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('painelScreen').style.display = 'block';
-    document.getElementById('btnLogout').style.display = 'block';
+    hide('loginScreen');
+    show('painelScreen');
+    show('btnLogout');
     sessionStorage.setItem('adminOk', '1');
     carregarContratos();
   } else {
@@ -228,302 +232,216 @@ window.entrar = function() {
     document.getElementById('senhaInput').focus();
   }
 }
+window.entrar = entrar;
 
-window.logout = function() {
+function logout() {
   sessionStorage.removeItem('adminOk');
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('painelScreen').style.display = 'none';
-  document.getElementById('btnLogout').style.display = 'none';
+  flex('loginScreen');
+  hide('painelScreen');
+  hide('btnLogout');
 }
+window.logout = logout;
 
-// Auto-login se já estava logado
-if (sessionStorage.getItem('adminOk') === '1') {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('painelScreen').style.display = 'block';
-  document.getElementById('btnLogout').style.display = 'block';
-  setTimeout(carregarContratos, 100);
-}
-
-// ── CARREGAR CONTRATOS ───────────────────────────────────────
-window.carregarContratos = async function() {
-  document.getElementById('tableWrap').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando contratos...</div>';
+// ── CARREGAR ─────────────────────────────────────────────────
+async function carregarContratos() {
+  document.getElementById('tableWrap').innerHTML =
+    '<div class="loading"><div class="spinner"></div>Carregando contratos...</div>';
   try {
     const q = query(collection(db, 'contratos'), orderBy('criadoEm', 'desc'));
     const snap = await getDocs(q);
     todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    atualizarStats();
-    filtrar();
-  } catch (e) {
-    // Fallback sem orderBy se índice não existir
+  } catch(e) {
     try {
       const snap = await getDocs(collection(db, 'contratos'));
       todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      todosContratos.sort((a,b) => (b.data_legivel || '').localeCompare(a.data_legivel || ''));
-      atualizarStats();
-      filtrar();
+      todosContratos.sort((a,b) => (b.data_legivel||'').localeCompare(a.data_legivel||''));
     } catch(e2) {
-      document.getElementById('tableWrap').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar: ${e2.message}</p></div>`;
+      document.getElementById('tableWrap').innerHTML =
+        `<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar: ${e2.message}</p></div>`;
+      return;
     }
   }
+  atualizarStats();
+  filtrar();
 }
+window.carregarContratos = carregarContratos;
 
 // ── STATS ────────────────────────────────────────────────────
 function atualizarStats() {
-  const total = todosContratos.length;
-  const teste = todosContratos.filter(c => c.periodo === '7 dias grátis').length;
+  const total  = todosContratos.length;
+  const teste  = todosContratos.filter(c => c.periodo === '7 dias grátis').length;
   const mensal = todosContratos.filter(c => c.periodo === 'Mensal').length;
-  const mesAtual = new Date().toLocaleString('pt-BR', {month:'2-digit',year:'numeric'});
-  const mes = todosContratos.filter(c => (c.data_legivel || '').includes(mesAtual.replace('/','/').slice(3))).length;
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statTeste').textContent = teste;
-  document.getElementById('statMensal').textContent = mensal;
-  document.getElementById('statMes').textContent = mes;
+  const anoMes = new Date().toLocaleString('pt-BR',{month:'2-digit',year:'numeric'}).replace('/','/');
+  const mes    = todosContratos.filter(c => (c.data_legivel||'').startsWith(anoMes.slice(-7,-5)+'/'+anoMes.slice(-4))||
+                 (c.data_legivel||'').includes('/'+anoMes.slice(-4))).length;
+  text('statTotal',  total);
+  text('statTeste',  teste);
+  text('statMensal', mensal);
+  text('statMes',    mes);
 }
 
 // ── FILTRAR ──────────────────────────────────────────────────
-window.filtrar = function() {
-  const busca = document.getElementById('filterBusca').value.toLowerCase();
+function filtrar() {
+  const busca   = document.getElementById('filterBusca').value.toLowerCase();
   const periodo = document.getElementById('filterPeriodo').value;
-  const plano = document.getElementById('filterPlano').value;
-
+  const plano   = document.getElementById('filterPlano').value;
   let lista = todosContratos.filter(c => {
-    const matchBusca = !busca ||
-      (c.nome||'').toLowerCase().includes(busca) ||
+    const ok1 = !busca || (c.nome||'').toLowerCase().includes(busca) ||
       (c.clinica||'').toLowerCase().includes(busca) ||
       (c.email||'').toLowerCase().includes(busca) ||
       (c.protocolo||'').toLowerCase().includes(busca);
-    const matchPeriodo = !periodo || c.periodo === periodo;
-    const matchPlano = !plano || c.plano === plano;
-    return matchBusca && matchPeriodo && matchPlano;
+    const ok2 = !periodo || c.periodo === periodo;
+    const ok3 = !plano   || c.plano   === plano;
+    return ok1 && ok2 && ok3;
   });
-
-  document.getElementById('resultsCount').textContent = lista.length + ' resultado(s)';
+  text('resultsCount', lista.length + ' resultado(s)');
   renderTabela(lista);
 }
+window.filtrar = filtrar;
 
-// ── RENDERIZAR TABELA ────────────────────────────────────────
+// ── TABELA ───────────────────────────────────────────────────
 function renderTabela(lista) {
-  if (lista.length === 0) {
-    document.getElementById('tableWrap').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>Nenhum contrato encontrado.</p></div>';
+  if (!lista.length) {
+    document.getElementById('tableWrap').innerHTML =
+      '<div class="empty"><div class="empty-icon">📋</div><p>Nenhum contrato encontrado.</p></div>';
     return;
   }
-
-  const rows = lista.map((c, i) => {
-    const planoBadge = {
-      'Essencial': 'badge-essencial',
-      'Profissional': 'badge-profissional',
-      'Clínica': 'badge-clinica'
-    }[c.plano] || '';
-
-    return `<tr>
-      <td style="font-weight:600;color:var(--verde);font-size:12px">${c.protocolo || '—'}</td>
-      <td>${c.data_legivel ? c.data_legivel.split(' ')[0] : '—'}</td>
-      <td>
-        <div style="font-weight:600">${c.nome || '—'}</div>
-        <div style="font-size:12px;color:var(--cinza)">${c.clinica || ''}</div>
-      </td>
-      <td>${c.email || '—'}</td>
-      <td>${c.telefone || '—'}</td>
-      <td><span class="badge ${c.periodo === '7 dias grátis' ? 'badge-teste' : 'badge-mensal'}">${c.periodo || '—'}</span></td>
-      <td><span class="badge ${planoBadge}">${c.plano || '—'}</span></td>
-      <td style="font-weight:600">${c.valor_mensal || '—'}</td>
-      <td>
-        <div style="display:flex;gap:6px">
-          <button class="btn-view" onclick="abrirModal(${i})">Ver</button>
-          <button class="btn-pdf" onclick="gerarPDF(${i})">PDF</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('tableWrap').innerHTML = `
-    <table>
-      <thead><tr>
-        <th>Protocolo</th><th>Data</th><th>Cliente / Clínica</th>
-        <th>E-mail</th><th>Telefone</th><th>Período</th>
-        <th>Plano</th><th>Valor</th><th>Ações</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-
-  // Guardar lista filtrada para acesso por índice
   window._listaFiltrada = lista;
+  const badgePlano = { Essencial:'badge-essencial', Profissional:'badge-profissional', 'Clínica':'badge-clinica' };
+  const rows = lista.map((c,i) => `<tr>
+    <td style="font-weight:600;color:var(--verde);font-size:12px">${c.protocolo||'—'}</td>
+    <td>${(c.data_legivel||'—').split(' ')[0]}</td>
+    <td><div style="font-weight:600">${c.nome||'—'}</div><div style="font-size:12px;color:var(--cinza)">${c.clinica||''}</div></td>
+    <td>${c.email||'—'}</td>
+    <td>${c.telefone||'—'}</td>
+    <td><span class="badge ${c.periodo==='7 dias grátis'?'badge-teste':'badge-mensal'}">${c.periodo||'—'}</span></td>
+    <td><span class="badge ${badgePlano[c.plano]||''}">${c.plano||'—'}</span></td>
+    <td style="font-weight:600">${c.valor_mensal||'—'}</td>
+    <td><div style="display:flex;gap:6px">
+      <button class="btn-view" onclick="abrirModal(${i})">Ver</button>
+      <button class="btn-pdf"  onclick="gerarPDF(${i})">PDF</button>
+    </div></td>
+  </tr>`).join('');
+
+  document.getElementById('tableWrap').innerHTML = `<table>
+    <thead><tr>
+      <th>Protocolo</th><th>Data</th><th>Cliente / Clínica</th>
+      <th>E-mail</th><th>Telefone</th><th>Período</th>
+      <th>Plano</th><th>Valor</th><th>Ações</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// ── MODAL DETALHES ───────────────────────────────────────────
-window.abrirModal = function(idx) {
+// ── MODAL ────────────────────────────────────────────────────
+function abrirModal(idx) {
   const c = window._listaFiltrada[idx];
   contratoAtual = c;
-
-  document.getElementById('modalTitulo').textContent = 'Contrato ' + (c.protocolo || '');
-
+  text('modalTitulo', 'Contrato ' + (c.protocolo||''));
   const campos = [
-    ['Protocolo', c.protocolo],
-    ['Data', c.data_legivel],
-    ['Nome', c.nome],
-    ['CPF / CNPJ', c.cpf_cnpj],
-    ['E-mail', c.email],
-    ['Telefone', c.telefone],
-    ['Endereço', c.endereco],
-    ['Clínica', c.clinica],
-    ['Especialidade', c.especialidade || '—'],
-    ['Sistema de agenda', c.sistema_agenda || '—'],
-    ['Período', c.periodo],
-    ['Plano', c.plano],
-    ['Valor mensal', c.valor_mensal],
-    ['Setup', c.setup],
-    ['Local assinatura', c.local_assinatura],
-    ['Modo assinatura', c.modo_assinatura],
+    ['Protocolo',c.protocolo],['Data',c.data_legivel],['Nome',c.nome],
+    ['CPF / CNPJ',c.cpf_cnpj],['E-mail',c.email],['Telefone',c.telefone],
+    ['Endereço',c.endereco],['Clínica',c.clinica],['Especialidade',c.especialidade||'—'],
+    ['Sistema agenda',c.sistema_agenda||'—'],['Período',c.periodo],['Plano',c.plano],
+    ['Valor mensal',c.valor_mensal],['Setup',c.setup],
+    ['Local assinatura',c.local_assinatura],['Modo assinatura',c.modo_assinatura],
   ];
-
-  const sigHtml = c.assinatura_img ? `
-    <div class="modal-sig">
-      <h4>Assinatura do Contratante</h4>
-      <img src="${c.assinatura_img}" alt="Assinatura">
-    </div>` : '';
-
+  const sigHtml = c.assinatura_img
+    ? `<div class="modal-sig"><h4>Assinatura do Contratante</h4><img src="${c.assinatura_img}" alt="Assinatura"></div>` : '';
   document.getElementById('modalBody').innerHTML =
-    campos.map(([l, v]) => `
-      <div class="modal-field">
-        <span class="modal-label">${l}</span>
-        <span class="modal-value">${v || '—'}</span>
-      </div>`).join('') + sigHtml;
-
+    campos.map(([l,v])=>`<div class="modal-field"><span class="modal-label">${l}</span><span class="modal-value">${v||'—'}</span></div>`).join('') + sigHtml;
   document.getElementById('modalOverlay').classList.add('open');
 }
+window.abrirModal = abrirModal;
 
-window.fecharModal = function() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
+function fecharModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+window.fecharModal = fecharModal;
 
-// ── GERAR PDF ────────────────────────────────────────────────
-window.gerarPDF = function(idx) {
-  contratoAtual = window._listaFiltrada[idx];
-  gerarPDFModal();
-}
+// ── PDF ──────────────────────────────────────────────────────
+function gerarPDF(idx) { contratoAtual = window._listaFiltrada[idx]; gerarPDFModal(); }
+window.gerarPDF = gerarPDF;
 
-window.gerarPDFModal = function() {
+function gerarPDFModal() {
   if (!contratoAtual) return;
   const c = contratoAtual;
-
-  // Gera assinatura cursiva da Caroline via canvas
-  const carolineCanvas = document.createElement('canvas');
-  carolineCanvas.width = 420; carolineCanvas.height = 110;
-  const ctx = carolineCanvas.getContext('2d');
-  ctx.font = "italic 46px 'Brush Script MT', cursive";
-  ctx.fillStyle = '#1a1a2e';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Caroline Pinto', 12, 52);
+  const cv = document.createElement('canvas');
+  cv.width=420; cv.height=110;
+  const ctx = cv.getContext('2d');
+  ctx.font="italic 46px 'Brush Script MT',cursive";
+  ctx.fillStyle='#1a1a2e'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.fillText('Caroline Pinto',12,52);
   ctx.beginPath(); ctx.moveTo(10,78); ctx.bezierCurveTo(80,72,200,82,310,76);
-  ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1.2; ctx.stroke();
-  const carolineSig = carolineCanvas.toDataURL();
-
-  const sigClienteHtml = c.assinatura_img
-    ? `<img src="${c.assinatura_img}" style="height:65px;max-width:260px;display:block;margin-bottom:4px">`
-    : '<div style="height:65px"></div>';
-
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=1.2; ctx.stroke();
+  const carolineSig = cv.toDataURL();
   const isTeste = c.periodo === '7 dias grátis';
-
+  const sigCliente = c.assinatura_img
+    ? `<img src="${c.assinatura_img}" style="height:65px;max-width:260px;display:block;margin-bottom:4px">` : '<div style="height:65px"></div>';
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Contrato ${c.protocolo} – Minha Recepcionista</title>
+<title>Contrato ${c.protocolo}</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:740px;margin:0 auto;padding:40px 32px;font-size:13px;line-height:1.8}
-.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:2.5px solid #0F6E56}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:2.5px solid #0F6E56}
 .logo{font-family:'Cormorant Garamond',serif;font-size:24px;color:#0F6E56;font-weight:600}
-h3{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;margin:18px 0 7px;border-bottom:1px solid #e0dbd2;padding-bottom:4px;color:#1a1a1a}
-p{margin-bottom:6px}
-ul{margin:4px 0 10px 18px}
-ul li{margin-bottom:3px}
-.highlight{background:#e1f5ee;border-left:3px solid #0F6E56;padding:9px 13px;margin:10px 0;border-radius:0 6px 6px 0}
-.sig-area{display:flex;justify-content:space-between;margin-top:56px;gap:48px}
-.sig-block{flex:1;border-top:1.5px solid #1a1a1a;padding-top:10px;font-size:12px;color:#444}
-@media print{body{padding:24px}button{display:none}}
+h3{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;margin:18px 0 7px;border-bottom:1px solid #e0dbd2;padding-bottom:4px}
+p{margin-bottom:6px} ul{margin:4px 0 10px 18px} ul li{margin-bottom:3px}
+.hl{background:#e1f5ee;border-left:3px solid #0F6E56;padding:9px 13px;margin:10px 0;border-radius:0 6px 6px 0}
+.sigs{display:flex;justify-content:space-between;margin-top:56px;gap:48px}
+.sig{flex:1;border-top:1.5px solid #1a1a1a;padding-top:10px;font-size:12px;color:#444}
+@media print{body{padding:24px}}
 </style></head><body>
-<div class="header">
-  <div>
-    <div class="logo">minharecepcionista</div>
-    <div style="font-size:11px;color:#888;margin-top:3px">minharecepcionista.com.br · CNPJ 61.934.682/0001-02</div>
-  </div>
-  <div style="text-align:right;font-size:12px;color:#888">
-    <strong>Protocolo: ${c.protocolo}</strong><br>
-    ${c.data_legivel || ''}
-  </div>
+<div class="hdr">
+  <div><div class="logo">minharecepcionista</div><div style="font-size:11px;color:#888;margin-top:3px">minharecepcionista.com.br · CNPJ 61.934.682/0001-02</div></div>
+  <div style="text-align:right;font-size:12px;color:#888"><strong>Protocolo: ${c.protocolo}</strong><br>${c.data_legivel||''}</div>
 </div>
-
 <h3>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ATENDIMENTO DIGITAL</h3>
-
 <h3>CLÁUSULA 1 – DAS PARTES</h3>
 <p><strong>CONTRATADA:</strong> Caroline Inacia Pinto, CNPJ <strong>61.934.682/0001-02</strong>, Rua F, 322, Sol Nascente, Nova União/MG — <strong>Minha Recepcionista</strong>.</p>
 <p><strong>CONTRATANTE:</strong> ${c.nome}, CPF/CNPJ ${c.cpf_cnpj}, e-mail ${c.email}, endereço ${c.endereco}, clínica <strong>${c.clinica}</strong>.</p>
-
 <h3>CLÁUSULA 2 – DO OBJETO</h3>
 <p>Prestação de serviços de atendimento humanizado via WhatsApp — Plano <strong>${c.plano}</strong>.</p>
-
 <h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
 <p><strong>Plano contratado:</strong> ${c.plano}</p>
-${isTeste ? `
-<div class="highlight">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo ao CONTRATANTE. Ao final, o CONTRATANTE poderá optar por continuar ou encerrar sem ônus.</div>
+${isTeste?`<div class="hl">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo. Ao final, o CONTRATANTE poderá optar por continuar ou encerrar sem ônus.</div>
 <p><strong>Valor mensal após o teste:</strong> ${c.valor_mensal}/mês</p>
-<div class="highlight">⚠️ <strong>Taxa de implantação (setup):</strong> Caso opte pela contratação mensal, será cobrada taxa única de <strong>R$ 400,00</strong> na ativação. Não é cobrada durante o teste.</div>
-` : `
-<p><strong>Valor mensal:</strong> ${c.valor_mensal}/mês</p>
-<p><strong>Taxa de setup (implantação):</strong> R$ 400,00 — pagamento único na ativação.</p>
-`}
-<p>Pagamento via Pix, boleto ou cartão, com vencimento no início de cada ciclo.</p>
-
+<div class="hl">⚠️ <strong>Taxa de implantação:</strong> Caso opte pela contratação mensal, taxa única de <strong>R$ 400,00</strong> na ativação. Não cobrada durante o teste.</div>`
+:`<p><strong>Valor mensal:</strong> ${c.valor_mensal}/mês</p>
+<p><strong>Taxa de setup:</strong> R$ 400,00 — pagamento único na ativação.</p>`}
+<p>Pagamento via Pix, boleto ou cartão, vencimento no início de cada ciclo.</p>
 <h3>CLÁUSULA 4 – DA VIGÊNCIA E RENOVAÇÃO</h3>
 <p>Prazo indeterminado, renovação automática mensal a partir da assinatura.</p>
-
 <h3>CLÁUSULA 5 – DO CANCELAMENTO</h3>
-<div class="highlight"><strong>Cancelamento:</strong> Mediante aviso prévio de <strong>15 (quinze) dias</strong>, sem multa rescisória, por e-mail ou WhatsApp.</div>
-
+<div class="hl"><strong>Cancelamento:</strong> Aviso prévio de <strong>15 (quinze) dias</strong>, sem multa, por e-mail ou WhatsApp.</div>
 <h3>CLÁUSULA 6 – DAS OBRIGAÇÕES DA CONTRATADA</h3>
-<ul>
-<li>Atendimento seg–sex, 8h–18h, exceto feriados nacionais;</li>
-<li>Sigilo absoluto sobre dados dos pacientes (LGPD – Lei 13.709/2018);</li>
-<li>Atendimento com identidade e linguagem da clínica;</li>
-<li>Encaminhar situações fora do roteiro à equipe da clínica.</li>
-</ul>
-
+<ul><li>Atendimento seg–sex, 8h–18h, exceto feriados nacionais</li><li>Sigilo absoluto sobre dados dos pacientes (LGPD – Lei 13.709/2018)</li><li>Atendimento com identidade e linguagem da clínica</li><li>Encaminhar situações fora do roteiro à equipe da clínica</li></ul>
 <h3>CLÁUSULA 7 – DAS OBRIGAÇÕES DO CONTRATANTE</h3>
-<ul>
-<li>Fornecer acesso ao WhatsApp Business e sistema de agenda;</li>
-<li>Manter pagamentos em dia;</li>
-<li>Informar alterações de agenda com antecedência.</li>
-</ul>
-
+<ul><li>Fornecer acesso ao WhatsApp Business e sistema de agenda</li><li>Manter pagamentos em dia</li><li>Informar alterações de agenda com antecedência</li></ul>
 <h3>CLÁUSULA 8 – LGPD E CONFIDENCIALIDADE</h3>
-<p>Dados pessoais tratados com sigilo, exclusivamente para execução dos serviços, em conformidade com a Lei nº 13.709/2018.</p>
-
+<p>Dados pessoais tratados com sigilo, exclusivamente para execução dos serviços, conforme Lei nº 13.709/2018.</p>
 <h3>CLÁUSULA 9 – FORO</h3>
 <p>Comarca de Belo Horizonte/MG, com renúncia a qualquer outro foro.</p>
-
-<div class="sig-area">
-  <div class="sig-block">
-    ${sigClienteHtml}
-    <strong>${c.nome}</strong><br>CONTRATANTE<br>${c.local_assinatura || 'Nova União/MG'}, ${c.data_legivel ? c.data_legivel.split(' ')[0] : ''}
-  </div>
-  <div class="sig-block">
-    <img src="${carolineSig}" style="height:65px;max-width:260px;display:block;margin-bottom:4px">
-    <strong>Caroline Inacia Pinto</strong><br>CONTRATADA – Minha Recepcionista<br>CNPJ 61.934.682/0001-02
-  </div>
+<div class="sigs">
+  <div class="sig">${sigCliente}<strong>${c.nome}</strong><br>CONTRATANTE<br>${c.local_assinatura||'Nova União/MG'}, ${(c.data_legivel||'').split(' ')[0]}</div>
+  <div class="sig"><img src="${carolineSig}" style="height:65px;max-width:260px;display:block;margin-bottom:4px"><strong>Caroline Inacia Pinto</strong><br>CONTRATADA – Minha Recepcionista<br>CNPJ 61.934.682/0001-02</div>
 </div>
-<div style="text-align:center;margin-top:40px;font-size:11px;color:#aaa;border-top:1px solid #f0ede8;padding-top:14px">
-  Documento gerado eletronicamente · Minha Recepcionista · Protocolo ${c.protocolo}
-</div>
+<div style="text-align:center;margin-top:40px;font-size:11px;color:#aaa;border-top:1px solid #f0ede8;padding-top:14px">Documento gerado eletronicamente · Minha Recepcionista · Protocolo ${c.protocolo}</div>
 </body></html>`;
-
-  const win = window.open('', '_blank');
+  const win = window.open('','_blank');
   win.document.write(html);
   win.document.close();
-  setTimeout(() => win.print(), 900);
+  setTimeout(()=>win.print(),900);
 }
+window.gerarPDFModal = gerarPDFModal;
 
-// Keyboard close modal
-document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+// ── TECLADO ──────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if(e.key==='Escape') fecharModal(); });
+
+// ── AUTO-LOGIN ───────────────────────────────────────────────
+if (sessionStorage.getItem('adminOk') === '1') {
+  hide('loginScreen');
+  show('painelScreen');
+  show('btnLogout');
+  carregarContratos();
+}
 </script>
 </body>
 </html>
