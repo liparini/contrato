@@ -363,13 +363,35 @@ function gerarPDFModal() {
   if (!contratoAtual) return;
   const c = contratoAtual;
   const cv = document.createElement('canvas');
-  cv.width=420; cv.height=110;
+  cv.width=500; cv.height=140;
   const ctx = cv.getContext('2d');
-  ctx.font="italic 46px 'Brush Script MT',cursive";
-  ctx.fillStyle='#1a1a2e'; ctx.textAlign='left'; ctx.textBaseline='middle';
-  ctx.fillText('Caroline Pinto',12,52);
-  ctx.beginPath(); ctx.moveTo(10,78); ctx.bezierCurveTo(80,72,200,82,310,76);
-  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.clearRect(0,0,500,140);
+  // Sombra delicada
+  ctx.shadowColor='rgba(15,70,56,0.13)'; ctx.shadowBlur=4; ctx.shadowOffsetY=2;
+  // Floreado inicial do "C"
+  ctx.beginPath(); ctx.moveTo(18,38);
+  ctx.bezierCurveTo(6,22,2,8,22,4); ctx.bezierCurveTo(38,1,52,10,46,22);
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=2.2; ctx.lineCap='round'; ctx.stroke();
+  // Letra "Carol" estilo caligrafia de casamento
+  ctx.shadowBlur=3;
+  ctx.font="italic 58px 'Brush Script MT','Segoe Script',cursive";
+  ctx.fillStyle='#1a1a2e'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  ctx.fillText('Carol',14,90);
+  // Floreado final saindo do "l"
+  ctx.shadowBlur=0;
+  const w=ctx.measureText('Carol').width;
+  ctx.beginPath(); ctx.moveTo(14+w-4,88);
+  ctx.bezierCurveTo(14+w+18,82,14+w+40,102,14+w+24,112);
+  ctx.bezierCurveTo(14+w+10,120,14+w-10,116,14+w+4,108);
+  ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=1.6; ctx.lineCap='round'; ctx.stroke();
+  // Sublinhado ondulado verde suave
+  ctx.beginPath(); ctx.moveTo(10,104);
+  ctx.bezierCurveTo(50,98,120,112,200,106);
+  ctx.bezierCurveTo(260,101,300,110,14+w+10,107);
+  ctx.strokeStyle='rgba(15,110,86,0.35)'; ctx.lineWidth=1.0; ctx.stroke();
+  // Pontinho decorativo
+  ctx.beginPath(); ctx.arc(8,92,2,0,Math.PI*2);
+  ctx.fillStyle='rgba(15,110,86,0.3)'; ctx.fill();
   const carolineSig = cv.toDataURL();
   const isTeste = c.periodo === '7 dias grátis';
   const sigCliente = c.assinatura_img
