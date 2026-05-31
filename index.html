@@ -658,7 +658,6 @@ function selectModel(idx, nome, f) {
 // ── FIREBASE ────────────────────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJ22iShszwMw3mVHLrkLgpbFRRHrV_tMA",
@@ -671,7 +670,6 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
-const storage = getStorage(fbApp);
 
 // Expor funções globais para onclick no HTML
 window.goStep = goStep;
@@ -683,10 +681,9 @@ window.clearCanvas = clearCanvas;
 window.renderTyped = renderTyped;
 window.downloadPDF = downloadPDF;
 
-// ── GERAR HTML DO CONTRATO PARA PDF/STORAGE ─────────────────
+// ── GERAR HTML DO CONTRATO PARA PDF ─────────────────────────
 function buildPDFHtml(contractId) {
   const nome = document.getElementById('nomeCliente').value;
-  const clinica = document.getElementById('nomeClinica').value;
   const hoje = new Date().toLocaleDateString('pt-BR');
   const local = document.getElementById('localAssinatura').value || 'Nova União/MG';
   const contractText = document.getElementById('contractText').innerHTML;
@@ -734,25 +731,9 @@ async function finalizar() {
   const contractId = 'MR-' + Date.now().toString().slice(-6);
   window._contractId = contractId;
 
-  // Gera o HTML do contrato como string
-  const pdfHtml = buildPDFHtml(contractId);
-  const htmlBlob = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(pdfHtml)));
-
-  let pdfUrl = null;
   let saveStatus = '';
-
   try {
-    // 1. Salvar HTML do contrato no Firebase Storage
-    const storageRef = ref(storage, `contratos/${contractId}.html`);
-    await uploadString(storageRef, pdfHtml, 'raw', { contentType: 'text/html' });
-    pdfUrl = await getDownloadURL(storageRef);
-
-    // 2. Salvar imagem da assinatura separada no Storage
-    const sigRef = ref(storage, `assinaturas/${contractId}_assinatura.png`);
-    await uploadString(sigRef, state.sigData, 'data_url');
-    const sigUrl = await getDownloadURL(sigRef);
-
-    // 3. Salvar dados no Firestore com URLs do Storage
+    // Salvar tudo no Firestore (sem Storage — sem CORS)
     await addDoc(collection(db, 'contratos'), {
       protocolo: contractId,
       criadoEm: serverTimestamp(),
@@ -771,11 +752,9 @@ async function finalizar() {
       setup: state.period === 'mensal' ? 'R$ 400,00' : 'Isento',
       local_assinatura: document.getElementById('localAssinatura').value || 'Nova União/MG',
       modo_assinatura: state.sigMode,
-      contrato_url: pdfUrl,
-      assinatura_url: sigUrl
+      assinatura_img: state.sigData  // base64 da assinatura salvo direto no Firestore
     });
-
-    saveStatus = `✅ Salvo no Firebase · <a href="${pdfUrl}" target="_blank" style="color:#0F6E56;font-weight:700">Ver contrato na nuvem ↗</a>`;
+    saveStatus = '✅ Contrato salvo no Firebase com sucesso!';
   } catch (e) {
     console.error('Firebase erro:', e);
     saveStatus = '⚠️ Erro ao salvar: ' + e.message;
