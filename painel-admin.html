@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin – Minha Recepcionista</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --verde:#0F6E56;--verde-claro:#1D9E75;--verde-bg:#E1F5EE;--verde-borda:#9FE1CB;
+  --areia:#FAF8F4;--branco:#fff;--preto:#1a1a1a;--cinza:#5F5E5A;--borda:#E0DBD2;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--preto);background:var(--areia);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--verde);padding:16px 5%;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#fff}
+.logo span{font-style:italic;opacity:0.75}
+.header-right{display:flex;align-items:center;gap:12px}
+.badge-admin{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:100px}
+.btn-logout{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;font-weight:600;padding:7px 16px;border-radius:100px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.btn-logout:hover{background:rgba(255,255,255,0.2)}
+
+/* LOGIN */
+.login-wrap{min-height:90vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border:1px solid var(--borda);border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(15,110,86,0.08)}
+.login-icon{width:64px;height:64px;background:var(--verde-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px}
+.login-card h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:6px}
+.login-card p{font-size:14px;color:var(--cinza);margin-bottom:28px}
+.input-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;text-align:left}
+.input-group label{font-size:13px;font-weight:600}
+.input-group input{border:1.5px solid var(--borda);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border 0.2s}
+.input-group input:focus{border-color:var(--verde)}
+.btn-login{width:100%;background:var(--verde);color:#fff;border:none;border-radius:100px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;margin-top:6px}
+.btn-login:hover{background:var(--verde-claro)}
+.login-error{background:#FEE2E2;color:#DC2626;font-size:13px;padding:10px 14px;border-radius:8px;margin-top:12px;display:none}
+
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:32px 20px 60px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--cinza);margin-bottom:28px}
+
+/* STATS BAR */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:#fff;border:1px solid var(--borda);border-radius:14px;padding:18px 20px}
+.stat-card .num{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--verde);line-height:1}
+.stat-card .lbl{font-size:13px;color:var(--cinza);margin-top:4px}
+
+/* FILTERS */
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.filter-input{border:1.5px solid var(--borda);border-radius:8px;padding:9px 14px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;transition:border 0.2s;min-width:200px}
+.filter-input:focus{border-color:var(--verde)}
+.filter-select{border:1.5px solid var(--borda);border-radius:8px;padding:9px 14px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff;cursor:pointer}
+.btn-refresh{background:var(--verde);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;transition:all 0.2s}
+.btn-refresh:hover{background:var(--verde-claro)}
+.results-count{font-size:13px;color:var(--cinza);margin-left:auto}
+
+/* TABLE */
+.table-wrap{background:#fff;border:1px solid var(--borda);border-radius:16px;overflow:hidden}
+.table-wrap table{width:100%;border-collapse:collapse}
+.table-wrap thead{background:var(--verde)}
+.table-wrap thead th{color:#fff;font-size:12px;font-weight:600;letter-spacing:0.5px;padding:13px 16px;text-align:left;white-space:nowrap}
+.table-wrap tbody tr{border-bottom:1px solid #f5f2ed;transition:background 0.15s}
+.table-wrap tbody tr:last-child{border-bottom:none}
+.table-wrap tbody tr:hover{background:var(--verde-bg)}
+.table-wrap td{padding:13px 16px;font-size:13px;color:var(--preto);vertical-align:middle}
+.badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:0.3px}
+.badge-teste{background:#FFF8E1;color:#F59E0B;border:1px solid #FDE68A}
+.badge-mensal{background:var(--verde-bg);color:var(--verde);border:1px solid var(--verde-borda)}
+.badge-essencial{background:#EEF2FF;color:#4F46E5;border:1px solid #C7D2FE}
+.badge-profissional{background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0}
+.badge-clinica{background:#FDF4FF;color:#9333EA;border:1px solid #E9D5FF}
+
+.btn-view{background:var(--verde-bg);color:var(--verde);border:1px solid var(--verde-borda);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
+.btn-view:hover{background:var(--verde);color:#fff}
+.btn-pdf{background:#fff;color:var(--preto);border:1px solid var(--borda);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
+.btn-pdf:hover{background:var(--preto);color:#fff}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:60px 20px;color:var(--cinza)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.loading{text-align:center;padding:60px 20px;color:var(--cinza);font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid var(--verde-borda);border-top-color:var(--verde);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.2)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-header h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--cinza);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.2s}
+.modal-close:hover{background:var(--cinza-claro)}
+.modal-body{padding:24px}
+.modal-field{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f5f2ed;font-size:14px}
+.modal-field:last-child{border-bottom:none}
+.modal-label{color:var(--cinza);min-width:140px}
+.modal-value{font-weight:500;text-align:right}
+.modal-sig{margin-top:20px;padding-top:20px;border-top:1px solid var(--borda)}
+.modal-sig h4{font-size:13px;font-weight:600;color:var(--cinza);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.modal-sig img{max-height:70px;border:1px solid var(--borda);border-radius:8px;padding:8px;background:#fafafa}
+.modal-actions{padding:16px 24px;border-top:1px solid var(--borda);display:flex;gap:10px;justify-content:flex-end}
+.btn-modal-pdf{background:var(--verde);color:#fff;border:none;border-radius:100px;padding:11px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.btn-modal-pdf:hover{background:var(--verde-claro)}
+.btn-modal-close{background:#fff;color:var(--preto);border:1.5px solid var(--borda);border-radius:100px;padding:11px 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.btn-modal-close:hover{background:var(--areia)}
+
+@media(max-width:768px){
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .table-wrap{overflow-x:auto}
+  .filters{flex-direction:column;align-items:stretch}
+  .filter-input,.filter-select{width:100%}
+  .results-count{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">minha<span>recepcionista</span></div>
+  <div class="header-right">
+    <div class="badge-admin">Painel Admin</div>
+    <button class="btn-logout" id="btnLogout" style="display:none" onclick="logout()">Sair</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <h2>Área Restrita</h2>
+    <p>Acesse com sua senha para visualizar os contratos assinados.</p>
+    <div class="input-group">
+      <label>Senha de acesso</label>
+      <input type="password" id="senhaInput" placeholder="Digite a senha" onkeydown="if(event.key==='Enter')entrar()">
+    </div>
+    <button class="btn-login" onclick="entrar()">Entrar no painel</button>
+    <div class="login-error" id="loginError">Senha incorreta. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painelScreen" style="display:none">
+  <div class="main">
+    <div class="page-title">Contratos Assinados</div>
+    <div class="page-sub">Visualize, filtre e baixe os contratos de cada cliente.</div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="num" id="statTotal">—</div><div class="lbl">Total de contratos</div></div>
+      <div class="stat-card"><div class="num" id="statTeste">—</div><div class="lbl">Períodos de teste</div></div>
+      <div class="stat-card"><div class="num" id="statMensal">—</div><div class="lbl">Contratos mensais</div></div>
+      <div class="stat-card"><div class="num" id="statMes">—</div><div class="lbl">Este mês</div></div>
+    </div>
+
+    <div class="filters">
+      <input class="filter-input" id="filterBusca" type="text" placeholder="🔍 Buscar por nome ou clínica..." oninput="filtrar()">
+      <select class="filter-select" id="filterPeriodo" onchange="filtrar()">
+        <option value="">Todos os períodos</option>
+        <option value="7 dias grátis">Teste (7 dias)</option>
+        <option value="Mensal">Mensal</option>
+      </select>
+      <select class="filter-select" id="filterPlano" onchange="filtrar()">
+        <option value="">Todos os planos</option>
+        <option value="Essencial">Essencial</option>
+        <option value="Profissional">Profissional</option>
+        <option value="Clínica">Clínica</option>
+      </select>
+      <button class="btn-refresh" onclick="carregarContratos()">↻ Atualizar</button>
+      <span class="results-count" id="resultsCount"></span>
+    </div>
+
+    <div class="table-wrap" id="tableWrap">
+      <div class="loading"><div class="spinner"></div>Carregando contratos...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)fecharModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitulo">Detalhes do Contrato</h3>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-close" onclick="fecharModal()">Fechar</button>
+      <button class="btn-modal-pdf" onclick="gerarPDFModal()">⬇️ Baixar PDF</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJ22iShszwMw3mVHLrkLgpbFRRHrV_tMA",
+  authDomain: "contrato-2af5f.firebaseapp.com",
+  projectId: "contrato-2af5f",
+  storageBucket: "contrato-2af5f.firebasestorage.app",
+  messagingSenderId: "363926701528",
+  appId: "1:363926701528:web:6f7682757c647adc501ead"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── SENHA LOCAL (troque para a sua) ──────────────────────────
+const SENHA_ADMIN = 'minharecepcionista2025';
+
+let todosContratos = [];
+let contratoAtual = null;
+
+// ── LOGIN ────────────────────────────────────────────────────
+window.entrar = function() {
+  const senha = document.getElementById('senhaInput').value;
+  if (senha === SENHA_ADMIN) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('painelScreen').style.display = 'block';
+    document.getElementById('btnLogout').style.display = 'block';
+    sessionStorage.setItem('adminOk', '1');
+    carregarContratos();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('senhaInput').value = '';
+    document.getElementById('senhaInput').focus();
+  }
+}
+
+window.logout = function() {
+  sessionStorage.removeItem('adminOk');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('painelScreen').style.display = 'none';
+  document.getElementById('btnLogout').style.display = 'none';
+}
+
+// Auto-login se já estava logado
+if (sessionStorage.getItem('adminOk') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('painelScreen').style.display = 'block';
+  document.getElementById('btnLogout').style.display = 'block';
+  setTimeout(carregarContratos, 100);
+}
+
+// ── CARREGAR CONTRATOS ───────────────────────────────────────
+window.carregarContratos = async function() {
+  document.getElementById('tableWrap').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando contratos...</div>';
+  try {
+    const q = query(collection(db, 'contratos'), orderBy('criadoEm', 'desc'));
+    const snap = await getDocs(q);
+    todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    atualizarStats();
+    filtrar();
+  } catch (e) {
+    // Fallback sem orderBy se índice não existir
+    try {
+      const snap = await getDocs(collection(db, 'contratos'));
+      todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      todosContratos.sort((a,b) => (b.data_legivel || '').localeCompare(a.data_legivel || ''));
+      atualizarStats();
+      filtrar();
+    } catch(e2) {
+      document.getElementById('tableWrap').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar: ${e2.message}</p></div>`;
+    }
+  }
+}
+
+// ── STATS ────────────────────────────────────────────────────
+function atualizarStats() {
+  const total = todosContratos.length;
+  const teste = todosContratos.filter(c => c.periodo === '7 dias grátis').length;
+  const mensal = todosContratos.filter(c => c.periodo === 'Mensal').length;
+  const mesAtual = new Date().toLocaleString('pt-BR', {month:'2-digit',year:'numeric'});
+  const mes = todosContratos.filter(c => (c.data_legivel || '').includes(mesAtual.replace('/','/').slice(3))).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statTeste').textContent = teste;
+  document.getElementById('statMensal').textContent = mensal;
+  document.getElementById('statMes').textContent = mes;
+}
+
+// ── FILTRAR ──────────────────────────────────────────────────
+window.filtrar = function() {
+  const busca = document.getElementById('filterBusca').value.toLowerCase();
+  const periodo = document.getElementById('filterPeriodo').value;
+  const plano = document.getElementById('filterPlano').value;
+
+  let lista = todosContratos.filter(c => {
+    const matchBusca = !busca ||
+      (c.nome||'').toLowerCase().includes(busca) ||
+      (c.clinica||'').toLowerCase().includes(busca) ||
+      (c.email||'').toLowerCase().includes(busca) ||
+      (c.protocolo||'').toLowerCase().includes(busca);
+    const matchPeriodo = !periodo || c.periodo === periodo;
+    const matchPlano = !plano || c.plano === plano;
+    return matchBusca && matchPeriodo && matchPlano;
+  });
+
+  document.getElementById('resultsCount').textContent = lista.length + ' resultado(s)';
+  renderTabela(lista);
+}
+
+// ── RENDERIZAR TABELA ────────────────────────────────────────
+function renderTabela(lista) {
+  if (lista.length === 0) {
+    document.getElementById('tableWrap').innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>Nenhum contrato encontrado.</p></div>';
+    return;
+  }
+
+  const rows = lista.map((c, i) => {
+    const planoBadge = {
+      'Essencial': 'badge-essencial',
+      'Profissional': 'badge-profissional',
+      'Clínica': 'badge-clinica'
+    }[c.plano] || '';
+
+    return `<tr>
+      <td style="font-weight:600;color:var(--verde);font-size:12px">${c.protocolo || '—'}</td>
+      <td>${c.data_legivel ? c.data_legivel.split(' ')[0] : '—'}</td>
+      <td>
+        <div style="font-weight:600">${c.nome || '—'}</div>
+        <div style="font-size:12px;color:var(--cinza)">${c.clinica || ''}</div>
+      </td>
+      <td>${c.email || '—'}</td>
+      <td>${c.telefone || '—'}</td>
+      <td><span class="badge ${c.periodo === '7 dias grátis' ? 'badge-teste' : 'badge-mensal'}">${c.periodo || '—'}</span></td>
+      <td><span class="badge ${planoBadge}">${c.plano || '—'}</span></td>
+      <td style="font-weight:600">${c.valor_mensal || '—'}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn-view" onclick="abrirModal(${i})">Ver</button>
+          <button class="btn-pdf" onclick="gerarPDF(${i})">PDF</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableWrap').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Protocolo</th><th>Data</th><th>Cliente / Clínica</th>
+        <th>E-mail</th><th>Telefone</th><th>Período</th>
+        <th>Plano</th><th>Valor</th><th>Ações</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  // Guardar lista filtrada para acesso por índice
+  window._listaFiltrada = lista;
+}
+
+// ── MODAL DETALHES ───────────────────────────────────────────
+window.abrirModal = function(idx) {
+  const c = window._listaFiltrada[idx];
+  contratoAtual = c;
+
+  document.getElementById('modalTitulo').textContent = 'Contrato ' + (c.protocolo || '');
+
+  const campos = [
+    ['Protocolo', c.protocolo],
+    ['Data', c.data_legivel],
+    ['Nome', c.nome],
+    ['CPF / CNPJ', c.cpf_cnpj],
+    ['E-mail', c.email],
+    ['Telefone', c.telefone],
+    ['Endereço', c.endereco],
+    ['Clínica', c.clinica],
+    ['Especialidade', c.especialidade || '—'],
+    ['Sistema de agenda', c.sistema_agenda || '—'],
+    ['Período', c.periodo],
+    ['Plano', c.plano],
+    ['Valor mensal', c.valor_mensal],
+    ['Setup', c.setup],
+    ['Local assinatura', c.local_assinatura],
+    ['Modo assinatura', c.modo_assinatura],
+  ];
+
+  const sigHtml = c.assinatura_img ? `
+    <div class="modal-sig">
+      <h4>Assinatura do Contratante</h4>
+      <img src="${c.assinatura_img}" alt="Assinatura">
+    </div>` : '';
+
+  document.getElementById('modalBody').innerHTML =
+    campos.map(([l, v]) => `
+      <div class="modal-field">
+        <span class="modal-label">${l}</span>
+        <span class="modal-value">${v || '—'}</span>
+      </div>`).join('') + sigHtml;
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+window.fecharModal = function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ── GERAR PDF ────────────────────────────────────────────────
+window.gerarPDF = function(idx) {
+  contratoAtual = window._listaFiltrada[idx];
+  gerarPDFModal();
+}
+
+window.gerarPDFModal = function() {
+  if (!contratoAtual) return;
+  const c = contratoAtual;
+
+  // Gera assinatura cursiva da Caroline via canvas
+  const carolineCanvas = document.createElement('canvas');
+  carolineCanvas.width = 420; carolineCanvas.height = 110;
+  const ctx = carolineCanvas.getContext('2d');
+  ctx.font = "italic 46px 'Brush Script MT', cursive";
+  ctx.fillStyle = '#1a1a2e';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Caroline Pinto', 12, 52);
+  ctx.beginPath(); ctx.moveTo(10,78); ctx.bezierCurveTo(80,72,200,82,310,76);
+  ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 1.2; ctx.stroke();
+  const carolineSig = carolineCanvas.toDataURL();
+
+  const sigClienteHtml = c.assinatura_img
+    ? `<img src="${c.assinatura_img}" style="height:65px;max-width:260px;display:block;margin-bottom:4px">`
+    : '<div style="height:65px"></div>';
+
+  const isTeste = c.periodo === '7 dias grátis';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Contrato ${c.protocolo} – Minha Recepcionista</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:740px;margin:0 auto;padding:40px 32px;font-size:13px;line-height:1.8}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:2.5px solid #0F6E56}
+.logo{font-family:'Cormorant Garamond',serif;font-size:24px;color:#0F6E56;font-weight:600}
+h3{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;margin:18px 0 7px;border-bottom:1px solid #e0dbd2;padding-bottom:4px;color:#1a1a1a}
+p{margin-bottom:6px}
+ul{margin:4px 0 10px 18px}
+ul li{margin-bottom:3px}
+.highlight{background:#e1f5ee;border-left:3px solid #0F6E56;padding:9px 13px;margin:10px 0;border-radius:0 6px 6px 0}
+.sig-area{display:flex;justify-content:space-between;margin-top:56px;gap:48px}
+.sig-block{flex:1;border-top:1.5px solid #1a1a1a;padding-top:10px;font-size:12px;color:#444}
+@media print{body{padding:24px}button{display:none}}
+</style></head><body>
+<div class="header">
+  <div>
+    <div class="logo">minharecepcionista</div>
+    <div style="font-size:11px;color:#888;margin-top:3px">minharecepcionista.com.br · CNPJ 61.934.682/0001-02</div>
+  </div>
+  <div style="text-align:right;font-size:12px;color:#888">
+    <strong>Protocolo: ${c.protocolo}</strong><br>
+    ${c.data_legivel || ''}
+  </div>
+</div>
+
+<h3>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ATENDIMENTO DIGITAL</h3>
+
+<h3>CLÁUSULA 1 – DAS PARTES</h3>
+<p><strong>CONTRATADA:</strong> Caroline Inacia Pinto, CNPJ <strong>61.934.682/0001-02</strong>, Rua F, 322, Sol Nascente, Nova União/MG — <strong>Minha Recepcionista</strong>.</p>
+<p><strong>CONTRATANTE:</strong> ${c.nome}, CPF/CNPJ ${c.cpf_cnpj}, e-mail ${c.email}, endereço ${c.endereco}, clínica <strong>${c.clinica}</strong>.</p>
+
+<h3>CLÁUSULA 2 – DO OBJETO</h3>
+<p>Prestação de serviços de atendimento humanizado via WhatsApp — Plano <strong>${c.plano}</strong>.</p>
+
+<h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
+<p><strong>Plano contratado:</strong> ${c.plano}</p>
+${isTeste ? `
+<div class="highlight">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo ao CONTRATANTE. Ao final, o CONTRATANTE poderá optar por continuar ou encerrar sem ônus.</div>
+<p><strong>Valor mensal após o teste:</strong> ${c.valor_mensal}/mês</p>
+<div class="highlight">⚠️ <strong>Taxa de implantação (setup):</strong> Caso opte pela contratação mensal, será cobrada taxa única de <strong>R$ 400,00</strong> na ativação. Não é cobrada durante o teste.</div>
+` : `
+<p><strong>Valor mensal:</strong> ${c.valor_mensal}/mês</p>
+<p><strong>Taxa de setup (implantação):</strong> R$ 400,00 — pagamento único na ativação.</p>
+`}
+<p>Pagamento via Pix, boleto ou cartão, com vencimento no início de cada ciclo.</p>
+
+<h3>CLÁUSULA 4 – DA VIGÊNCIA E RENOVAÇÃO</h3>
+<p>Prazo indeterminado, renovação automática mensal a partir da assinatura.</p>
+
+<h3>CLÁUSULA 5 – DO CANCELAMENTO</h3>
+<div class="highlight"><strong>Cancelamento:</strong> Mediante aviso prévio de <strong>15 (quinze) dias</strong>, sem multa rescisória, por e-mail ou WhatsApp.</div>
+
+<h3>CLÁUSULA 6 – DAS OBRIGAÇÕES DA CONTRATADA</h3>
+<ul>
+<li>Atendimento seg–sex, 8h–18h, exceto feriados nacionais;</li>
+<li>Sigilo absoluto sobre dados dos pacientes (LGPD – Lei 13.709/2018);</li>
+<li>Atendimento com identidade e linguagem da clínica;</li>
+<li>Encaminhar situações fora do roteiro à equipe da clínica.</li>
+</ul>
+
+<h3>CLÁUSULA 7 – DAS OBRIGAÇÕES DO CONTRATANTE</h3>
+<ul>
+<li>Fornecer acesso ao WhatsApp Business e sistema de agenda;</li>
+<li>Manter pagamentos em dia;</li>
+<li>Informar alterações de agenda com antecedência.</li>
+</ul>
+
+<h3>CLÁUSULA 8 – LGPD E CONFIDENCIALIDADE</h3>
+<p>Dados pessoais tratados com sigilo, exclusivamente para execução dos serviços, em conformidade com a Lei nº 13.709/2018.</p>
+
+<h3>CLÁUSULA 9 – FORO</h3>
+<p>Comarca de Belo Horizonte/MG, com renúncia a qualquer outro foro.</p>
+
+<div class="sig-area">
+  <div class="sig-block">
+    ${sigClienteHtml}
+    <strong>${c.nome}</strong><br>CONTRATANTE<br>${c.local_assinatura || 'Nova União/MG'}, ${c.data_legivel ? c.data_legivel.split(' ')[0] : ''}
+  </div>
+  <div class="sig-block">
+    <img src="${carolineSig}" style="height:65px;max-width:260px;display:block;margin-bottom:4px">
+    <strong>Caroline Inacia Pinto</strong><br>CONTRATADA – Minha Recepcionista<br>CNPJ 61.934.682/0001-02
+  </div>
+</div>
+<div style="text-align:center;margin-top:40px;font-size:11px;color:#aaa;border-top:1px solid #f0ede8;padding-top:14px">
+  Documento gerado eletronicamente · Minha Recepcionista · Protocolo ${c.protocolo}
+</div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 900);
+}
+
+// Keyboard close modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+</script>
+</body>
+</html>
