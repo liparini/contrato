@@ -658,6 +658,7 @@ function selectModel(idx, nome, f) {
 // ── FIREBASE ────────────────────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJ22iShszwMw3mVHLrkLgpbFRRHrV_tMA",
@@ -670,6 +671,7 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 
 // Expor funções globais para onclick no HTML
 window.goStep = goStep;
@@ -680,6 +682,46 @@ window.setTab = setTab;
 window.clearCanvas = clearCanvas;
 window.renderTyped = renderTyped;
 window.downloadPDF = downloadPDF;
+
+// ── GERAR HTML DO CONTRATO PARA PDF/STORAGE ─────────────────
+function buildPDFHtml(contractId) {
+  const nome = document.getElementById('nomeCliente').value;
+  const clinica = document.getElementById('nomeClinica').value;
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const local = document.getElementById('localAssinatura').value || 'Nova União/MG';
+  const contractText = document.getElementById('contractText').innerHTML;
+  const sigImg = state.sigData ? `<img src="${state.sigData}" style="height:70px;max-width:260px">` : '';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Contrato – Minha Recepcionista</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+body{font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:720px;margin:0 auto;padding:40px 32px;font-size:13px;line-height:1.8}
+h3{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;margin:18px 0 6px;border-bottom:1px solid #e0e0e0;padding-bottom:4px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #0F6E56}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;color:#0F6E56;font-weight:600}
+.sig-area{display:flex;justify-content:space-between;margin-top:48px;gap:40px}
+.sig-block{flex:1;border-top:1.5px solid #1a1a1a;padding-top:10px;font-size:12px;color:#444}
+.highlight{background:#e1f5ee;border-left:3px solid #0F6E56;padding:8px 12px;margin:8px 0;border-radius:0 4px 4px 0}
+ul{margin:4px 0 10px 16px}
+@media print{body{padding:20px}}
+</style></head><body>
+<div class="header">
+  <div><div class="logo">minharecepcionista</div><div style="font-size:11px;color:#888;margin-top:2px">minharecepcionista.com.br · CNPJ 61.934.682/0001-02</div></div>
+  <div style="text-align:right;font-size:12px;color:#888">Protocolo: ${contractId}<br>${hoje}</div>
+</div>
+${contractText}
+<div class="sig-area">
+  <div class="sig-block">
+    ${sigImg}
+    <p><strong>${nome}</strong><br>CONTRATANTE</p>
+    <p>${local}, ${hoje}</p>
+  </div>
+  <div class="sig-block">
+    <p style="margin-top:40px"><strong>Caroline Inacia Pinto</strong><br>CONTRATADA – Minha Recepcionista<br>CNPJ 61.934.682/0001-02</p>
+  </div>
+</div>
+</body></html>`;
+}
 
 // ── FINALIZAR ────────────────────────────────────────────────
 async function finalizar() {
@@ -692,31 +734,48 @@ async function finalizar() {
   const contractId = 'MR-' + Date.now().toString().slice(-6);
   window._contractId = contractId;
 
-  const payload = {
-    protocolo: contractId,
-    criadoEm: serverTimestamp(),
-    data_legivel: new Date().toLocaleString('pt-BR'),
-    nome: document.getElementById('nomeCliente').value,
-    cpf_cnpj: document.getElementById('docCliente').value,
-    email: document.getElementById('emailCliente').value,
-    telefone: document.getElementById('telCliente').value,
-    endereco: document.getElementById('endCliente').value,
-    clinica: document.getElementById('nomeClinica').value,
-    especialidade: document.getElementById('especialidade').value,
-    sistema_agenda: document.getElementById('sistemaAgenda').value,
-    periodo: state.period === 'teste' ? '7 dias grátis' : 'Mensal',
-    plano: planData[state.plan].name,
-    valor_mensal: 'R$ ' + planData[state.plan].price.toLocaleString('pt-BR') + ',00',
-    setup: state.period === 'mensal' ? 'R$ 400,00' : 'Isento',
-    local_assinatura: document.getElementById('localAssinatura').value || 'Nova União/MG',
-    modo_assinatura: state.sigMode,
-    assinatura_img: state.sigData
-  };
+  // Gera o HTML do contrato como string
+  const pdfHtml = buildPDFHtml(contractId);
+  const htmlBlob = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(pdfHtml)));
 
+  let pdfUrl = null;
   let saveStatus = '';
+
   try {
-    await addDoc(collection(db, 'contratos'), payload);
-    saveStatus = '✅ Salvo no Firebase';
+    // 1. Salvar HTML do contrato no Firebase Storage
+    const storageRef = ref(storage, `contratos/${contractId}.html`);
+    await uploadString(storageRef, pdfHtml, 'raw', { contentType: 'text/html' });
+    pdfUrl = await getDownloadURL(storageRef);
+
+    // 2. Salvar imagem da assinatura separada no Storage
+    const sigRef = ref(storage, `assinaturas/${contractId}_assinatura.png`);
+    await uploadString(sigRef, state.sigData, 'data_url');
+    const sigUrl = await getDownloadURL(sigRef);
+
+    // 3. Salvar dados no Firestore com URLs do Storage
+    await addDoc(collection(db, 'contratos'), {
+      protocolo: contractId,
+      criadoEm: serverTimestamp(),
+      data_legivel: new Date().toLocaleString('pt-BR'),
+      nome: document.getElementById('nomeCliente').value,
+      cpf_cnpj: document.getElementById('docCliente').value,
+      email: document.getElementById('emailCliente').value,
+      telefone: document.getElementById('telCliente').value,
+      endereco: document.getElementById('endCliente').value,
+      clinica: document.getElementById('nomeClinica').value,
+      especialidade: document.getElementById('especialidade').value,
+      sistema_agenda: document.getElementById('sistemaAgenda').value,
+      periodo: state.period === 'teste' ? '7 dias grátis' : 'Mensal',
+      plano: planData[state.plan].name,
+      valor_mensal: 'R$ ' + planData[state.plan].price.toLocaleString('pt-BR') + ',00',
+      setup: state.period === 'mensal' ? 'R$ 400,00' : 'Isento',
+      local_assinatura: document.getElementById('localAssinatura').value || 'Nova União/MG',
+      modo_assinatura: state.sigMode,
+      contrato_url: pdfUrl,
+      assinatura_url: sigUrl
+    });
+
+    saveStatus = `✅ Salvo no Firebase · <a href="${pdfUrl}" target="_blank" style="color:#0F6E56;font-weight:700">Ver contrato na nuvem ↗</a>`;
   } catch (e) {
     console.error('Firebase erro:', e);
     saveStatus = '⚠️ Erro ao salvar: ' + e.message;
@@ -737,47 +796,9 @@ window.finalizar = finalizar;
 
 // DOWNLOAD PDF (print-based)
 function downloadPDF() {
-  const nome = document.getElementById('nomeCliente').value;
-  const clinica = document.getElementById('nomeClinica').value;
-  const p = planData[state.plan];
-  const isTeste = state.period === 'teste';
-  const hoje = new Date().toLocaleDateString('pt-BR');
-  const local = document.getElementById('localAssinatura').value || 'Nova União/MG';
-  const contractText = document.getElementById('contractText').innerHTML;
-  const sigImg = state.sigData ? `<img src="${state.sigData}" style="height:70px;max-width:260px">` : '';
-
+  const html = buildPDFHtml(window._contractId || 'MR-000000');
   const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Contrato – Minha Recepcionista</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-body{font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:720px;margin:0 auto;padding:40px 32px;font-size:13px;line-height:1.8}
-h1{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;margin-bottom:4px}
-h3{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;margin:18px 0 6px;border-bottom:1px solid #e0e0e0;padding-bottom:4px}
-.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #0F6E56}
-.logo{font-family:'Cormorant Garamond',serif;font-size:22px;color:#0F6E56;font-weight:600}
-.sig-area{display:flex;justify-content:space-between;margin-top:48px;gap:40px}
-.sig-block{flex:1;border-top:1.5px solid #1a1a1a;padding-top:10px;font-size:12px;color:#444}
-.highlight{background:#e1f5ee;border-left:3px solid #0F6E56;padding:8px 12px;margin:8px 0;border-radius:0 4px 4px 0}
-ul{margin:4px 0 10px 16px}
-@media print{body{padding:20px}}
-</style></head><body>
-<div class="header">
-  <div><div class="logo">minharecepcionista</div><div style="font-size:11px;color:#888;margin-top:2px">minharecepcionista.com.br · CNPJ 61.934.682/0001-02</div></div>
-  <div style="text-align:right;font-size:12px;color:#888">Protocolo: ${window._contractId}<br>${hoje}</div>
-</div>
-${contractText}
-<div class="sig-area">
-  <div class="sig-block">
-    ${sigImg}
-    <p><strong>${nome}</strong><br>CONTRATANTE</p>
-    <p>${local}, ${hoje}</p>
-  </div>
-  <div class="sig-block">
-    <p style="margin-top:40px"><strong>Caroline Inacia Pinto</strong><br>CONTRATADA – Minha Recepcionista<br>CNPJ 61.934.682/0001-02</p>
-  </div>
-</div>
-</body></html>`);
+  win.document.write(html);
   win.document.close();
   setTimeout(() => win.print(), 800);
 }
