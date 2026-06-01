@@ -440,23 +440,20 @@ function renderTabela(lista) {
     <td>${(c.data_legivel||'—').split(' ')[0]}</td>
     <td><div style="font-weight:600">${c.nome||'—'}</div><div style="font-size:12px;color:var(--cinza)">${c.clinica||''}</div></td>
     <td>${c.email||'—'}</td>
-    <td>${c.telefone||'—'}</td>
     <td><span class="badge ${c.periodo==='7 dias grátis'?'badge-teste':'badge-mensal'}">${c.periodo||'—'}</span></td>
     <td><span class="badge ${badgePlano[c.plano]||''}">${c.plano||'—'}</span></td>
     <td style="font-weight:600">${c.valor_total||c.valor_mensal||'—'}<br>${c.adicionais && c.adicionais!=='Nenhum' ? `<span style='font-size:11px;color:#888;font-weight:400'>${c.adicionais.split(', ').length} adicional(is)</span>` : ''}</td>
     <td><div style="display:flex;gap:6px">
-      <div style='display:flex;flex-direction:column;gap:5px;min-width:190px'>
-        <div style='display:flex;gap:4px;align-items:center'>
+      <div style='display:flex;flex-direction:column;gap:4px;width:150px'>
+        <div style='display:flex;align-items:center;justify-content:space-between'>
           ${c.ativo ? `<span class='status-badge status-ativo'>● Ativo</span>` : c.periodo==='7 dias grátis' ? `<span class='status-badge status-teste'>● Teste</span>` : `<span class='status-badge status-inativo'>● Inativo</span>`}
-          <button class='btn-del' onclick='excluirContrato("${c.id}","${(c.nome||'').replace(/'/g,"")}")' title='Excluir contrato'>✕</button>
+          <button class='btn-del' onclick='excluirContrato("${c.id}","${(c.nome||'').replace(/'/g,"")}")' title='Excluir'>✕</button>
         </div>
-        <div style='display:flex;gap:4px;flex-wrap:wrap'>
-          <button class='btn-view' onclick='abrirModal(${i})'>Ver</button>
-          <button class='btn-pdf' onclick='gerarPDF(${i})'>PDF</button>
-          ${c.ativo
-            ? `<button class='btn-ativo' onclick='abrirCobrancas(${i})' title='Ver cobranças'>💰 ${calcProxCobranca(c)}</button>`
-            : `<button class='btn-ativar' onclick='ativarContrato("${c.id}")'>✅ Ativar</button>`}
-        </div>
+        <button class='btn-view' style='width:100%' onclick='abrirModal(${i})'>👁 Ver detalhes</button>
+        <button class='btn-pdf' style='width:100%' onclick='gerarPDF(${i})'>📄 Baixar PDF</button>
+        ${c.ativo
+          ? `<button class='btn-ativo' style='width:100%' onclick='abrirCobrancas(${i})'>💰 Cobranças ${calcProxCobranca(c)}</button>`
+          : `<button class='btn-ativar' style='width:100%' onclick='ativarContrato("${c.id}")'>✅ Ativar contrato</button>`}
       </div>
     </div></td>
   </tr>`).join('');
@@ -464,8 +461,8 @@ function renderTabela(lista) {
   document.getElementById('tableWrap').innerHTML = `<table>
     <thead><tr>
       <th>Protocolo</th><th>Data</th><th>Cliente / Clínica</th>
-      <th>E-mail</th><th>Telefone</th><th>Período</th>
-      <th>Plano</th><th>Valor</th><th style="min-width:200px">Ações</th>
+      <th>E-mail</th><th>Período</th>
+      <th>Plano</th><th>Valor</th><th style="min-width:160px;width:160px">Status / Ações</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
