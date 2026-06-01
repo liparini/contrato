@@ -316,7 +316,7 @@ function renderTabela(lista) {
     <td>${c.telefone||'—'}</td>
     <td><span class="badge ${c.periodo==='7 dias grátis'?'badge-teste':'badge-mensal'}">${c.periodo||'—'}</span></td>
     <td><span class="badge ${badgePlano[c.plano]||''}">${c.plano||'—'}</span></td>
-    <td style="font-weight:600">${c.valor_mensal||'—'}</td>
+    <td style="font-weight:600">${c.valor_total||c.valor_mensal||'—'}<br>${c.adicionais && c.adicionais!=='Nenhum' ? `<span style='font-size:11px;color:#888;font-weight:400'>${c.adicionais.split(', ').length} adicional(is)</span>` : ''}</td>
     <td><div style="display:flex;gap:6px">
       <button class="btn-view" onclick="abrirModal(${i})">Ver</button>
       <button class="btn-pdf"  onclick="gerarPDF(${i})">PDF</button>
@@ -341,7 +341,7 @@ function abrirModal(idx) {
     ['CPF / CNPJ',c.cpf_cnpj],['E-mail',c.email],['Telefone',c.telefone],
     ['Endereço',c.endereco],['Clínica',c.clinica],['Especialidade',c.especialidade||'—'],
     ['Sistema agenda',c.sistema_agenda||'—'],['Período',c.periodo],['Plano',c.plano],
-    ['Valor mensal',c.valor_mensal],['Setup',c.setup],
+    ['Valor mensal (plano)',c.valor_mensal],['Adicionais',c.adicionais||'Nenhum'],['Valor total mensal',c.valor_total||c.valor_mensal],['Setup',c.setup],
     ['Local assinatura',c.local_assinatura],['Modo assinatura',c.modo_assinatura],
   ];
   const sigHtml = c.assinatura_img
@@ -424,9 +424,12 @@ p{margin-bottom:6px} ul{margin:4px 0 10px 18px} ul li{margin-bottom:3px}
 <h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
 <p><strong>Plano contratado:</strong> ${c.plano}</p>
 ${isTeste?`<div class="hl">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo. Ao final, o CONTRATANTE poderá optar por continuar ou encerrar sem ônus.</div>
-<p><strong>Valor mensal após o teste:</strong> ${c.valor_mensal}/mês</p>
-<div class="hl">⚠️ <strong>Taxa de implantação:</strong> Caso opte pela contratação mensal, taxa única de <strong>R$ 400,00</strong> na ativação. Não cobrada durante o teste.</div>`
-:`<p><strong>Valor mensal:</strong> ${c.valor_mensal}/mês</p>
+<p><strong>Valor mensal após o teste:</strong> ${c.valor_total||c.valor_mensal}/mês</p>
+${c.adicionais && c.adicionais!=='Nenhum' ? `<p><strong>Adicionais contratados:</strong> ${c.adicionais}</p>` : ''}
+<div class="hl">⚠️ <strong>Taxa de implantação:</strong> Caso opte pela contratação mensal, taxa única de <strong>R$ 400,00</strong> na ativação. Não cobrada durante o teste.</div>
+<div class="hl">💳 <strong>1º pagamento após o teste:</strong> R$ ${c.valor_total ? (parseInt(c.valor_total.replace(/\D/g,'').slice(0,-2))+400).toLocaleString('pt-BR') : '—'},00 (valor mensal + taxa de ativação)</div>`
+:`<p><strong>Valor mensal:</strong> ${c.valor_total||c.valor_mensal}/mês</p>
+${c.adicionais && c.adicionais!=='Nenhum' ? `<p><strong>Adicionais contratados:</strong> ${c.adicionais}</p>` : ''}
 <p><strong>Taxa de setup:</strong> R$ 400,00 — pagamento único na ativação.</p>`}
 <p>Pagamento via Pix, boleto ou cartão, vencimento no início de cada ciclo.</p>
 <h3>CLÁUSULA 4 – DA VIGÊNCIA E RENOVAÇÃO</h3>
