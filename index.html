@@ -419,7 +419,7 @@ input::placeholder{color:#bbb}
       <div class="success-screen">
         <div class="success-icon">✅</div>
         <h2>Contrato assinado com sucesso!</h2>
-        <p>Seu contrato foi gerado e está pronto para download. Enviaremos uma cópia ao e-mail cadastrado em breve.</p>
+        <p>Seu contrato foi gerado e está pronto para download.</p>
         <button class="download-btn" onclick="downloadPDF()">⬇️ Baixar contrato em PDF</button>
         <br>
         <div class="contract-id" id="contractIdDisplay"></div>
@@ -931,7 +931,7 @@ async function finalizar() {
       modo_assinatura: state.sigMode,
       assinatura_img: state.sigData  // base64 da assinatura salvo direto no Firestore
     });
-    saveStatus = '✅ Contrato salvo no Firebase com sucesso!';
+    saveStatus = '✅ Contrato salvo com sucesso!';
   } catch (e) {
     console.error('Firebase erro:', e);
     saveStatus = '⚠️ Erro ao salvar: ' + e.message;
