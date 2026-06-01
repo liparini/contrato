@@ -670,8 +670,16 @@ function buildSummary() {
         <div style="font-size:12px;font-weight:600;margin-bottom:4px">Composição do valor mensal:</div>
         <div style="font-size:12px">Plano ${p.name}: R$ ${p.price.toLocaleString('pt-BR')},00/mês</div>
         ${addons.map(([k])=>`<div style="font-size:12px">+ ${addonData[k].name}: R$ ${addonData[k].price.toLocaleString('pt-BR')},00/mês</div>`).join('')}
-        <div style="font-size:12px;font-weight:700;margin-top:4px;border-top:1px solid #FFE082;padding-top:4px">Total: R$ ${total.toLocaleString('pt-BR')},00/mês (pré-pago)</div>
-      </div>` : '';
+        <div style="font-size:12px;font-weight:700;margin-top:4px;border-top:1px solid #FFE082;padding-top:4px">Total mensal: R$ ${total.toLocaleString('pt-BR')},00/mês (pré-pago)</div>
+        <div style="font-size:13px;font-weight:700;margin-top:6px;background:#856404;color:#fff;border-radius:6px;padding:7px 10px">
+          💳 1º pagamento: R$ ${(total+400).toLocaleString('pt-BR')},00 (inclui taxa de ativação R$ 400,00)
+        </div>
+      </div>` : `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #FFE082">
+        <div style="font-size:13px;font-weight:700;background:#856404;color:#fff;border-radius:6px;padding:7px 10px">
+          💳 1º pagamento: R$ ${(total+400).toLocaleString('pt-BR')},00 (inclui taxa de ativação R$ 400,00)
+        </div>
+        <div style="font-size:12px;margin-top:4px">A partir do 2º mês: R$ ${total.toLocaleString('pt-BR')},00/mês</div>
+      </div>`;
 
   const testeNotice = isTeste ? `
     <div style="margin-top:14px;background:#FFF8E1;border:1px solid #FFE082;border-radius:10px;padding:14px 16px;font-size:13px;color:#7c6200;line-height:1.7">
@@ -686,6 +694,10 @@ function buildSummary() {
       será cobrado no início de cada ciclo mensal.<br>
       A taxa de ativação de <strong>R$ 400,00</strong> é cobrada <strong>uma única vez</strong> na ativação do serviço.
       ${addons.length > 0 ? breakdownLines.replace('#FFE082','var(--verde-borda)').replace('#FFF8E1','var(--verde-bg)') : ''}
+      <div style="margin-top:10px;padding:9px 12px;background:var(--verde);border-radius:8px;color:#fff;font-weight:700;font-size:13px">
+        💳 1º pagamento: R$ ${(total+400).toLocaleString('pt-BR')},00 (mensal + taxa de ativação)<br>
+        <span style="font-size:12px;font-weight:400;opacity:0.85">A partir do 2º mês: R$ ${total.toLocaleString('pt-BR')},00/mês</span>
+      </div>
     </div>`;
 
   const setupRow = !isTeste
