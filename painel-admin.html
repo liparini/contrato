@@ -76,6 +76,20 @@ body{font-family:'DM Sans',sans-serif;color:var(--preto);background:var(--areia)
 .btn-view:hover{background:var(--verde);color:#fff}
 .btn-pdf{background:#fff;color:var(--preto);border:1px solid var(--borda);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
 .btn-pdf:hover{background:var(--preto);color:#fff}
+.btn-ativar{background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
+.btn-ativar:hover{background:#C0DD97}
+.btn-ativo{background:#3B6D11;color:#fff;border:1px solid #3B6D11;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.btn-del{background:#FEE2E2;color:#DC2626;border:1px solid #FCA5A5;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
+.btn-del:hover{background:#DC2626;color:#fff}
+.cobranca-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;font-size:13px;margin-bottom:5px;border:1px solid var(--borda)}
+.cobranca-row.pago{background:#EAF3DE;border-color:#C0DD97}
+.cobranca-row.pendente{background:#FFF8E1;border-color:#FFE082}
+.cobranca-row.atrasado{background:#FEE2E2;border-color:#FCA5A5}
+.cobranca-check{width:18px;height:18px;border-radius:4px;cursor:pointer;accent-color:var(--verde)}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700}
+.status-ativo{background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97}
+.status-teste{background:#E6F1FB;color:#185FA5;border:1px solid #85B7EB}
+.status-inativo{background:var(--cinza-claro);color:var(--cinza);border:1px solid var(--borda)}
 
 /* EMPTY / LOADING */
 .empty{text-align:center;padding:60px 20px;color:var(--cinza)}
@@ -193,7 +207,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--preto);background:var(--areia)
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, orderBy, query, doc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJ22iShszwMw3mVHLrkLgpbFRRHrV_tMA",
@@ -281,6 +295,119 @@ function atualizarStats() {
 }
 
 // ── FILTRAR ──────────────────────────────────────────────────
+// ── HELPERS ─────────────────────────────────────────────────
+function calcProxCobranca(contrato) {
+  if (!contrato.ativo || !contrato.dataAtivacao) return 'Cobranças';
+  const ativacao = contrato.dataAtivacao.toDate ? contrato.dataAtivacao.toDate() : new Date(contrato.dataAtivacao);
+  const cobradas = (contrato.cobrancas || []).filter(x => x.pago).length;
+  const proxData = new Date(ativacao);
+  proxData.setDate(proxData.getDate() + (cobradas * 30));
+  const hoje = new Date();
+  const diff = Math.ceil((proxData - hoje) / (1000*60*60*24));
+  if (diff < 0) return '⚠️ Vencida';
+  if (diff === 0) return '🔴 Hoje';
+  if (diff <= 5) return `🟡 ${diff}d`;
+  return `🟢 ${diff}d`;
+}
+
+// ── ATIVAR CONTRATO ──────────────────────────────────────────
+async function ativarContrato(id) {
+  if (!confirm('Confirmar ativação do contrato? A 1ª cobrança será registrada hoje.')) return;
+  const hoje = new Date();
+  const primeiraCobranca = { numero: 1, dataVenc: hoje.toISOString(), pago: true, dataPago: hoje.toISOString() };
+  try {
+    await updateDoc(doc(db, 'contratos', id), {
+      ativo: true,
+      dataAtivacao: serverTimestamp(),
+      cobrancas: [primeiraCobranca]
+    });
+    await carregarContratos();
+    alert('✅ Contrato ativado! 1ª cobrança (taxa de ativação + 1º mês) marcada como gerada.');
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+window.ativarContrato = ativarContrato;
+
+// ── EXCLUIR CONTRATO ─────────────────────────────────────────
+async function excluirContrato(id, nome) {
+  if (!confirm(`Excluir o contrato de "${nome}"? Esta ação não pode ser desfeita.`)) return;
+  try {
+    await deleteDoc(doc(db, 'contratos', id));
+    await carregarContratos();
+  } catch(e) { alert('Erro ao excluir: ' + e.message); }
+}
+window.excluirContrato = excluirContrato;
+
+// ── MODAL COBRANÇAS ──────────────────────────────────────────
+window._contratoCobranca = null;
+
+async function abrirCobrancas(idx) {
+  const contrato = window._listaFiltrada[idx];
+  window._contratoCobranca = contrato;
+  const ativacao = contrato.dataAtivacao?.toDate ? contrato.dataAtivacao.toDate() : new Date(contrato.dataAtivacao || Date.now());
+  const cobrancas = contrato.cobrancas || [{ numero:1, dataVenc: ativacao.toISOString(), pago:true, dataPago: ativacao.toISOString() }];
+
+  // Gera lista de 12 cobranças (1 ano)
+  const lista = [];
+  for (let i = 0; i < 12; i++) {
+    const venc = new Date(ativacao);
+    venc.setDate(venc.getDate() + (i * 30));
+    const salva = cobrancas.find(x => x.numero === i+1);
+    lista.push({
+      numero: i+1,
+      dataVenc: venc,
+      pago: salva?.pago || false,
+      dataPago: salva?.dataPago || null
+    });
+  }
+
+  const hoje = new Date();
+  const rows = lista.map(cb => {
+    const vencida = !cb.pago && cb.dataVenc < hoje;
+    const status = cb.pago ? 'pago' : vencida ? 'atrasado' : 'pendente';
+    const label = cb.pago ? '✅ Gerada' : vencida ? '⚠️ Pendente' : '⏳ Futura';
+    const dataFmt = cb.dataVenc.toLocaleDateString('pt-BR');
+    return `<div class="cobranca-row ${status}">
+      <div>
+        <strong style="font-size:13px">${cb.numero === 1 ? '1ª Cobrança (Ativação + 1º mês)' : cb.numero + 'ª Cobrança'}</strong>
+        <div style="font-size:12px;color:var(--cinza)">Vencimento: ${dataFmt} · ${label}</div>
+      </div>
+      <input type="checkbox" class="cobranca-check" ${cb.pago?'checked':''} onchange="toggleCobranca(${cb.numero-1}, this.checked)" title="Marcar como gerada">
+    </div>`;
+  }).join('');
+
+  const total = contrato.valor_total || contrato.valor_mensal || '—';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--verde)">
+      <strong>${contrato.clinica || contrato.nome}</strong> · Plano ${contrato.plano}<br>
+      Valor mensal: <strong>${total}/mês</strong> · Ativado em: <strong>${ativacao.toLocaleDateString('pt-BR')}</strong>
+    </div>
+    <div style="font-size:12px;color:var(--cinza);margin-bottom:10px">Marque o checkbox quando gerar cada cobrança. A contagem é de 30 em 30 dias a partir da ativação.</div>
+    ${rows}`;
+  document.getElementById('modalTitulo').textContent = '💰 Cobranças — ' + (contrato.protocolo||'');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+window.abrirCobrancas = abrirCobrancas;
+
+async function toggleCobranca(idx, checked) {
+  const contrato = window._contratoCobranca;
+  if (!contrato) return;
+  const ativacao = contrato.dataAtivacao?.toDate ? contrato.dataAtivacao.toDate() : new Date(contrato.dataAtivacao || Date.now());
+  const cobrancas = Array.from({length:12},(_,i) => {
+    const salva = (contrato.cobrancas||[]).find(x=>x.numero===i+1);
+    const venc = new Date(ativacao); venc.setDate(venc.getDate()+(i*30));
+    return salva || {numero:i+1, dataVenc:venc.toISOString(), pago:false, dataPago:null};
+  });
+  cobrancas[idx].pago = checked;
+  cobrancas[idx].dataPago = checked ? new Date().toISOString() : null;
+  try {
+    await updateDoc(doc(db,'contratos',contrato.id),{cobrancas});
+    contrato.cobrancas = cobrancas;
+    // Refresh the modal visually
+    abrirCobrancas(window._listaFiltrada.indexOf(contrato));
+  } catch(e) { alert('Erro: '+e.message); }
+}
+window.toggleCobranca = toggleCobranca;
+
 function filtrar() {
   const busca   = document.getElementById('filterBusca').value.toLowerCase();
   const periodo = document.getElementById('filterPeriodo').value;
@@ -318,8 +445,13 @@ function renderTabela(lista) {
     <td><span class="badge ${badgePlano[c.plano]||''}">${c.plano||'—'}</span></td>
     <td style="font-weight:600">${c.valor_total||c.valor_mensal||'—'}<br>${c.adicionais && c.adicionais!=='Nenhum' ? `<span style='font-size:11px;color:#888;font-weight:400'>${c.adicionais.split(', ').length} adicional(is)</span>` : ''}</td>
     <td><div style="display:flex;gap:6px">
-      <button class="btn-view" onclick="abrirModal(${i})">Ver</button>
-      <button class="btn-pdf"  onclick="gerarPDF(${i})">PDF</button>
+      ${c.ativo ? `<span class='status-badge status-ativo'>● Ativo</span>` : c.periodo==='7 dias grátis' ? `<span class='status-badge status-teste'>● Teste</span>` : `<span class='status-badge status-inativo'>● Inativo</span>`}
+      <div style='display:flex;gap:4px;margin-top:4px'>
+        <button class='btn-view' onclick='abrirModal(${i})'>Ver</button>
+        <button class='btn-pdf' onclick='gerarPDF(${i})'>PDF</button>
+        ${c.ativo ? `<button class='btn-ativo' onclick='abrirCobrancas(${i})'>💰 ${calcProxCobranca(c)}</button>` : `<button class='btn-ativar' onclick='ativarContrato("${c.id}")'>Ativar</button>`}
+        <button class='btn-del' onclick='excluirContrato("${c.id}","${(c.nome||'').replace(/'/g,"")}")'>✕</button>
+      </div>
     </div></td>
   </tr>`).join('');
 
