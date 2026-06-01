@@ -611,6 +611,10 @@ ${(()=>{
 <h3>CLÁUSULA 5 – DO CANCELAMENTO</h3>
 <div class="highlight"><strong>Cancelamento:</strong> Qualquer das partes pode encerrar o contrato mediante aviso prévio de <strong>15 (quinze) dias</strong>, sem multa rescisória, por escrito via e-mail ou WhatsApp. O CONTRATANTE será atendido normalmente durante o período de aviso.</div>
 
+<h3>CLÁUSULA 5-A – DO REAJUSTE ANUAL</h3>
+<p>Os valores dos serviços contratados poderão ser reajustados anualmente, após <strong>12 (doze) meses</strong> de contrato ativo, com base na variação acumulada do <strong>IPCA</strong> (Índice Nacional de Preços ao Consumidor Amplo), divulgado pelo IBGE, referente aos últimos 12 meses.</p>
+<div class="highlight">A CONTRATADA comunicará o reajuste com antecedência mínima de <strong>30 (trinta) dias</strong>, por e-mail ou WhatsApp, informando o percentual aplicado e o novo valor mensal a vigorar. Caso o CONTRATANTE não concorde com o reajuste, poderá cancelar o contrato conforme a Cláusula 5, sem multa.</div>
+
 <h3>CLÁUSULA 6 – DAS OBRIGAÇÕES DA CONTRATADA</h3>
 <ul>
 <li>Realizar o atendimento de segunda a sexta-feira, das 8h às 18h, exceto feriados nacionais;</li>
@@ -661,17 +665,32 @@ function buildSummary() {
       <span>R$ ${total.toLocaleString('pt-BR')},00/mês</span>
     </div>`;
 
+  const breakdownLines = addons.length > 0
+    ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #FFE082">
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px">Composição do valor mensal:</div>
+        <div style="font-size:12px">Plano ${p.name}: R$ ${p.price.toLocaleString('pt-BR')},00/mês</div>
+        ${addons.map(([k])=>`<div style="font-size:12px">+ ${addonData[k].name}: R$ ${addonData[k].price.toLocaleString('pt-BR')},00/mês</div>`).join('')}
+        <div style="font-size:12px;font-weight:700;margin-top:4px;border-top:1px solid #FFE082;padding-top:4px">Total: R$ ${total.toLocaleString('pt-BR')},00/mês (pré-pago)</div>
+      </div>` : '';
+
   const testeNotice = isTeste ? `
-    <div style="margin-top:14px;background:#FFF8E1;border:1px solid #FFE082;border-radius:10px;padding:12px 16px;font-size:13px;color:#7c6200;line-height:1.6">
-      ⏱️ <strong>Período de teste:</strong> Os 7 primeiros dias são gratuitos. Após esse período, o valor de
-      <strong>R$ ${total.toLocaleString('pt-BR')},00/mês</strong> será cobrado de forma <strong>pré-paga</strong>
-      no início de cada ciclo mensal.${!isTeste ? '' : extra > 0 ? '' : ''}
-      ${extra > 0 ? `<br>Isso inclui o plano ${p.name} + ${addons.length} adicional(is) selecionado(s).` : ''}
-    </div>` : '';
+    <div style="margin-top:14px;background:#FFF8E1;border:1px solid #FFE082;border-radius:10px;padding:14px 16px;font-size:13px;color:#7c6200;line-height:1.7">
+      ⏱️ <strong>Período de teste:</strong> Os 7 primeiros dias são <strong>gratuitos</strong> e sem cobrança.<br>
+      Após esse período, o valor de <strong>R$ ${total.toLocaleString('pt-BR')},00/mês</strong> será cobrado
+      de forma <strong>pré-paga</strong> no início de cada ciclo mensal.<br>
+      A taxa de ativação de <strong>R$ 400,00</strong> é cobrada <strong>uma única vez</strong>, somente ao confirmar a contratação após o teste.
+      ${breakdownLines}
+    </div>` : `
+    <div style="margin-top:14px;background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--verde);line-height:1.7">
+      📅 <strong>Cobrança mensal pré-paga:</strong> O valor de <strong>R$ ${total.toLocaleString('pt-BR')},00/mês</strong>
+      será cobrado no início de cada ciclo mensal.<br>
+      A taxa de ativação de <strong>R$ 400,00</strong> é cobrada <strong>uma única vez</strong> na ativação do serviço.
+      ${addons.length > 0 ? breakdownLines.replace('#FFE082','var(--verde-borda)').replace('#FFF8E1','var(--verde-bg)') : ''}
+    </div>`;
 
   const setupRow = !isTeste
-    ? `<div class="summary-row"><span class="summary-label">Setup — pagamento único</span><span>R$ 400,00</span></div>`
-    : `<div class="summary-row"><span class="summary-label">Setup após o teste</span><span>R$ 400,00 (cobrado na ativação)</span></div>`;
+    ? `<div class="summary-row"><span class="summary-label">Taxa de ativação <small style="font-weight:400;color:var(--cinza)">(cobrada uma única vez)</small></span><span>R$ 400,00</span></div>`
+    : `<div class="summary-row"><span class="summary-label">Taxa de ativação após o teste <small style="font-weight:400;color:var(--cinza)">(cobrada uma única vez)</small></span><span>R$ 400,00</span></div>`;
 
   document.getElementById('summaryContent').innerHTML = `
     <div class="summary-row"><span class="summary-label">Contratante</span><span>${document.getElementById('nomeCliente').value}</span></div>
