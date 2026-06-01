@@ -5,7 +5,980 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contrato de Prestação de Serviços – Minha Recepcionista</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrato de Prestação de Serviços – Minha Recepcionista</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --verde:#0F6E56;--verde-claro:#1D9E75;--verde-bg:#E1F5EE;--verde-borda:#9FE1CB;
+  --areia:#FAF8F4;--branco:#fff;--preto:#1a1a1a;--cinza:#5F5E5A;--cinza-claro:#F1EFE8;
+  --borda:#E0DBD2;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--preto);background:var(--areia);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--verde);padding:18px 5%;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+.logo span{font-style:italic;opacity:0.8}
+.header-tag{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:5px 14px;border-radius:100px}
+
+/* CONTAINER */
+.container{max-width:860px;margin:0 auto;padding:40px 20px 80px}
+
+/* STEP INDICATOR */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:40px;background:#fff;border:1px solid var(--borda);border-radius:12px;overflow:hidden}
+.step-item{flex:1;padding:14px 12px;text-align:center;font-size:13px;font-weight:500;color:var(--cinza);cursor:pointer;transition:all 0.2s;position:relative;border-right:1px solid var(--borda)}
+.step-item:last-child{border-right:none}
+.step-item.active{background:var(--verde);color:#fff;font-weight:600}
+.step-item.done{background:var(--verde-bg);color:var(--verde);font-weight:600}
+.step-num{display:block;font-size:11px;opacity:0.6;margin-bottom:2px}
+
+/* PANELS */
+.panel{display:none;animation:fadeIn 0.3s ease}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARD */
+.card{background:#fff;border:1px solid var(--borda);border-radius:16px;padding:32px;margin-bottom:20px}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:4px;color:var(--preto)}
+.card-sub{font-size:14px;color:var(--cinza);margin-bottom:24px}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:13px;font-weight:600;color:var(--preto)}
+input,select,textarea{border:1.5px solid var(--borda);border-radius:8px;padding:10px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--preto);background:#fff;transition:border 0.2s;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--verde)}
+input::placeholder{color:#bbb}
+.form-hint{font-size:12px;color:var(--cinza);margin-top:3px}
+
+/* PLAN SELECT */
+.plan-options{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.plan-opt{border:2px solid var(--borda);border-radius:12px;padding:18px 14px;cursor:pointer;transition:all 0.2s;position:relative;text-align:center}
+.plan-opt:hover{border-color:var(--verde-borda);background:var(--verde-bg)}
+.plan-opt.selected{border-color:var(--verde);background:var(--verde-bg)}
+.plan-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--verde);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;letter-spacing:0.5px;white-space:nowrap}
+.plan-name{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cinza);margin-bottom:6px}
+.plan-price{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--preto);line-height:1}
+.plan-price small{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:400;color:var(--cinza)}
+.plan-features{font-size:12px;color:var(--cinza);margin-top:8px;line-height:1.6}
+
+/* PERIOD SELECT */
+.period-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.period-opt{border:2px solid var(--borda);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative}
+.period-opt.selected{border-color:var(--verde);background:var(--verde-bg)}
+.period-opt:hover{border-color:var(--verde-borda)}
+.period-opt h4{font-size:15px;font-weight:600;margin-bottom:4px}
+.period-opt p{font-size:13px;color:var(--cinza);line-height:1.5}
+.period-tag{position:absolute;top:-10px;right:16px;background:#FFF3CD;color:#856404;font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;letter-spacing:0.3px;border:1px solid #FFE69C}
+
+/* CONTRACT TEXT */
+.contract-text{background:var(--areia);border:1px solid var(--borda);border-radius:10px;padding:24px;font-size:13px;line-height:1.8;color:#3a3a3a;max-height:420px;overflow-y:auto}
+.contract-text h3{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;margin:18px 0 8px;color:var(--preto)}
+.contract-text h3:first-child{margin-top:0}
+.contract-text p{margin-bottom:8px}
+.contract-text ul{margin:6px 0 10px 18px}
+.contract-text ul li{margin-bottom:4px}
+.contract-text strong{font-weight:600;color:var(--preto)}
+.contract-text .highlight{background:rgba(15,110,86,0.08);border-left:3px solid var(--verde);padding:10px 14px;border-radius:0 6px 6px 0;margin:10px 0}
+.contract-text::-webkit-scrollbar{width:5px}
+.contract-text::-webkit-scrollbar-track{background:#f0ede8}
+.contract-text::-webkit-scrollbar-thumb{background:var(--verde-borda);border-radius:10px}
+
+/* SIGNATURE AREA */
+.sig-tabs{display:flex;gap:8px;margin-bottom:18px}
+.sig-tab{padding:9px 20px;border-radius:8px;border:1.5px solid var(--borda);font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--cinza);transition:all 0.2s}
+.sig-tab.active{background:var(--verde);color:#fff;border-color:var(--verde)}
+
+.canvas-container{position:relative;border:2px dashed var(--borda);border-radius:10px;background:#fafafa;overflow:hidden;height:180px}
+.canvas-container canvas{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+.canvas-placeholder{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#bbb;pointer-events:none;text-align:center}
+.canvas-placeholder svg{display:block;margin:0 auto 6px;opacity:0.3}
+
+.sig-typed-input{font-size:24px;font-family:'Cormorant Garamond',serif;border:2px dashed var(--borda);border-radius:10px;padding:20px;width:100%;text-align:center;background:#fafafa;color:var(--preto);height:80px}
+.sig-typed-input:focus{border-color:var(--verde);outline:none}
+
+.sig-models{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sig-model{border:2px solid var(--borda);border-radius:10px;padding:14px 10px;cursor:pointer;text-align:center;transition:all 0.2s;background:#fafafa}
+.sig-model:hover{border-color:var(--verde-borda);background:var(--verde-bg)}
+.sig-model.selected{border-color:var(--verde);background:var(--verde-bg)}
+.sig-model span{font-size:22px;display:block;margin-bottom:4px;line-height:1.2}
+.sig-model small{font-size:10px;color:var(--cinza);font-weight:500}
+
+.clear-btn{background:none;border:none;color:var(--cinza);font-size:12px;cursor:pointer;margin-top:8px;padding:4px 8px;text-decoration:underline;font-family:'DM Sans',sans-serif}
+.clear-btn:hover{color:var(--preto)}
+
+/* SUMMARY */
+.summary-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0ede8;font-size:14px}
+.summary-row:last-child{border-bottom:none;font-weight:700;font-size:15px;color:var(--verde)}
+.summary-label{color:var(--cinza)}
+
+/* AGREE */
+.addon-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px}
+.addon-opt{border:2px solid var(--borda);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative;background:#fff}
+.addon-opt:hover{border-color:var(--verde-borda);background:var(--verde-bg)}
+.addon-opt.selected{border-color:var(--verde);background:var(--verde-bg)}
+.addon-opt.selected .addon-check{background:var(--verde);border-color:var(--verde)}
+.addon-check{width:20px;height:20px;min-width:20px;border-radius:5px;border:1.5px solid var(--borda);display:flex;align-items:center;justify-content:center;transition:all 0.2s;float:right;margin-left:8px}
+.addon-name{font-size:14px;font-weight:600;margin-bottom:4px;padding-right:28px}
+.addon-desc{font-size:12px;color:var(--cinza);line-height:1.5;margin-bottom:6px}
+.addon-price{font-size:13px;font-weight:700;color:var(--verde)}
+@media(max-width:560px){.addon-grid{grid-template-columns:1fr}}
+.agree-box{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;cursor:pointer}
+.agree-box input[type=checkbox]{width:18px;height:18px;min-width:18px;accent-color:var(--verde);cursor:pointer;margin-top:1px}
+.agree-box label{font-size:13px;color:var(--preto);cursor:pointer;line-height:1.5}
+
+/* BUTTONS */
+.btn-row{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
+.btn-back{background:none;border:2px solid var(--borda);color:var(--cinza);padding:12px 24px;border-radius:100px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.btn-back:hover{border-color:var(--verde);color:var(--verde)}
+.btn-next{background:var(--verde);color:#fff;padding:12px 28px;border-radius:100px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.btn-next:hover{background:var(--verde-claro)}
+.btn-next:disabled{background:#ccc;cursor:not-allowed}
+
+/* SUCCESS */
+.success-screen{text-align:center;padding:48px 20px}
+.success-icon{width:80px;height:80px;background:var(--verde-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:36px}
+.success-screen h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;margin-bottom:12px}
+.success-screen p{font-size:15px;color:var(--cinza);max-width:440px;margin:0 auto 28px;line-height:1.7}
+.download-btn{background:var(--verde);color:#fff;padding:14px 28px;border-radius:100px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:8px}
+.download-btn:hover{background:var(--verde-claro)}
+.contract-id{background:var(--cinza-claro);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--cinza);display:inline-block;margin-top:16px;font-weight:600}
+
+/* REQUIRED INDICATOR */
+.req{color:#e53e3e;margin-left:2px}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .plan-options{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .period-options{grid-template-columns:1fr}
+  .sig-models{grid-template-columns:1fr 1fr}
+  .steps{display:none}
+  .btn-row{flex-direction:column-reverse}
+  .btn-next,.btn-back{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">minha<span>recepcionista</span></div>
+  <div class="header-tag">Contrato Digital</div>
+</div>
+
+<div class="container">
+
+  <!-- STEP INDICATOR -->
+  <div class="steps" id="stepBar">
+    <div class="step-item active" data-step="1"><span class="step-num">01</span>Seus dados</div>
+    <div class="step-item" data-step="2"><span class="step-num">02</span>Plano</div>
+    <div class="step-item" data-step="3"><span class="step-num">03</span>Contrato</div>
+    <div class="step-item" data-step="4"><span class="step-num">04</span>Assinatura</div>
+  </div>
+
+  <!-- PANEL 1 - DADOS DO CLIENTE -->
+  <div class="panel active" id="panel1">
+    <div class="card">
+      <div class="card-title">Dados do Contratante</div>
+      <div class="card-sub">Preencha as informações da pessoa ou empresa que está contratando o serviço.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome completo / Razão Social <span class="req">*</span></label>
+          <input type="text" id="nomeCliente" placeholder="Ex: Maria Souza" required>
+        </div>
+        <div class="form-group">
+          <label>CPF / CNPJ <span class="req">*</span></label>
+          <input type="text" id="docCliente" placeholder="000.000.000-00" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>E-mail <span class="req">*</span></label>
+          <input type="email" id="emailCliente" placeholder="seu@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp <span class="req">*</span></label>
+          <input type="text" id="telCliente" placeholder="(31) 99999-0000" required>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Endereço completo <span class="req">*</span></label>
+          <input type="text" id="endCliente" placeholder="Rua, número, bairro, cidade/UF" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome da Clínica / Consultório <span class="req">*</span></label>
+          <input type="text" id="nomeClinica" placeholder="Ex: Clínica Renovar" required>
+        </div>
+        <div class="form-group">
+          <label>Especialidade(s)</label>
+          <input type="text" id="especialidade" placeholder="Ex: Dermatologia, Odontologia">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Sistema de agenda utilizado</label>
+          <select id="sistemaAgenda">
+            <option value="">Selecione...</option>
+            <option>Google Agenda</option>
+            <option>Doctoralia</option>
+            <option>iClinic</option>
+            <option>Nuvem Odonto</option>
+            <option>ClinicWeb</option>
+            <option>Outro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-next" onclick="goStep(2)">Próximo: Escolher plano →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2 - PLANO -->
+  <div class="panel" id="panel2">
+    <div class="card">
+      <div class="card-title">Tipo de Contratação</div>
+      <div class="card-sub">Escolha o período de teste ou contratação mensal.</div>
+      <div class="period-options">
+        <div class="period-opt" id="pTeste" onclick="selectPeriod('teste')">
+          <div class="period-tag">SEM CUSTO</div>
+          <h4>⏱️ Período de Teste</h4>
+          <p>7 dias gratuitos com todos os recursos do plano escolhido. Sem cobrança, sem fidelidade.</p>
+        </div>
+        <div class="period-opt" id="pMensal" onclick="selectPeriod('mensal')">
+          <h4>📅 Contratação Mensal</h4>
+          <p>Plano mensal sem fidelidade. Cancele a qualquer momento com aviso prévio de 15 dias.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="planCard">
+      <div class="card-title">Escolha seu Plano</div>
+      <div class="card-sub">Selecione o plano mais adequado para a sua clínica.</div>
+      <div class="plan-options">
+        <div class="plan-opt" id="planEssencial" onclick="selectPlan('essencial')">
+          <div class="plan-name">Essencial</div>
+          <div class="plan-price">R$497<small>/mês</small></div>
+          <div class="plan-features">Até 1 profissional<br>Seg–Sex, 8h–18h<br>Agendamentos e dúvidas</div>
+        </div>
+        <div class="plan-opt" id="planProfissional" onclick="selectPlan('profissional')">
+          <div class="plan-badge">MAIS ESCOLHIDO</div>
+          <div class="plan-name">Profissional</div>
+          <div class="plan-price">R$797<small>/mês</small></div>
+          <div class="plan-features">Até 2 profissionais<br>Confirmações ativas<br>Triagem + relatório</div>
+        </div>
+        <div class="plan-opt" id="planClinica" onclick="selectPlan('clinica')">
+          <div class="plan-name">Clínica</div>
+          <div class="plan-price">R$1.197<small>/mês</small></div>
+          <div class="plan-features">Até 3 profissionais<br>Reunião mensal<br>Serviço completo</div>
+        </div>
+      </div>
+      <div id="setupInfo" style="display:none;background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--verde);margin-top:4px">
+        <strong>🔧 Taxa de setup (implantação): R$400</strong> — pagamento único, cobrado na ativação. Inclui onboarding e roteiro personalizado.
+      </div>
+    </div>
+
+    <div class="card" id="addonsCard">
+      <div class="card-title">Serviços Adicionais</div>
+      <div class="card-sub">Opcional — selecione os serviços extras desejados. Os valores são somados ao plano escolhido.</div>
+      <div class="addon-grid">
+        <div class="addon-opt" id="addonSabado" onclick="toggleAddon('sabado')">
+          <div class="addon-check" id="checkSabado"></div>
+          <div class="addon-name">Atendimento aos Sábados</div>
+          <div class="addon-desc">Cobertura de sábado das 8h às 18h, com o mesmo padrão de atendimento dos dias úteis.</div>
+          <div class="addon-price">+ R$ 400,00/mês</div>
+        </div>
+        <div class="addon-opt" id="addonConfirmacao" onclick="toggleAddon('confirmacao')">
+          <div class="addon-check" id="checkConfirmacao"></div>
+          <div class="addon-name">Confirmação 24h Antes</div>
+          <div class="addon-desc">Enviamos mensagem ativa para cada paciente 24h antes da consulta, reduzindo faltas e agenda vazia.</div>
+          <div class="addon-price">+ R$ 300,00/mês</div>
+        </div>
+        <div class="addon-opt" id="addonCampanha" onclick="toggleAddon('campanha')">
+          <div class="addon-check" id="checkCampanha"></div>
+          <div class="addon-name">Campanhas de Retorno</div>
+          <div class="addon-desc">Disparo mensal para pacientes inativos, aniversariantes e lembretes de retorno periódico.</div>
+          <div class="addon-price">+ R$ 200,00/mês</div>
+        </div>
+        <div class="addon-opt" id="addonNoturno" onclick="toggleAddon('noturno')">
+          <div class="addon-check" id="checkNoturno"></div>
+          <div class="addon-name">Atendimento Noturno</div>
+          <div class="addon-desc">Extensão do atendimento de seg a sex das 18h às 21h para capturar pacientes fora do horário comercial.</div>
+          <div class="addon-price">+ R$ 350,00/mês</div>
+        </div>
+        <div class="addon-opt" id="addonPesquisa" onclick="toggleAddon('pesquisa')">
+          <div class="addon-check" id="checkPesquisa"></div>
+          <div class="addon-name">Pesquisa de Satisfação</div>
+          <div class="addon-desc">Mensagem automática pós-consulta pedindo avaliação no Google, aumentando sua reputação online.</div>
+          <div class="addon-price">+ R$ 150,00/mês</div>
+        </div>
+        <div class="addon-opt" id="addonFaltas" onclick="toggleAddon('faltas')">
+          <div class="addon-check" id="checkFaltas"></div>
+          <div class="addon-name">Reagendamento de Faltas</div>
+          <div class="addon-desc">Contato ativo com pacientes que faltaram para tentar remarcar e evitar perda de receita.</div>
+          <div class="addon-price">+ R$ 200,00/mês</div>
+        </div>
+      </div>
+      <div id="addonTotal" style="display:none;margin-top:14px;padding:12px 16px;background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;font-size:13px;color:var(--verde)">
+        <strong>Total com adicionais: <span id="addonTotalVal"></span>/mês</strong>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(1)">← Voltar</button>
+      <button class="btn-next" onclick="goStep(3)">Próximo: Ver contrato →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3 - CONTRATO -->
+  <div class="panel" id="panel3">
+    <div class="card">
+      <div class="card-title">Contrato de Prestação de Serviços</div>
+      <div class="card-sub">Leia o contrato completo antes de prosseguir com a assinatura.</div>
+      <div class="contract-text" id="contractText"><!-- preenchido via JS --></div>
+      <div style="margin-top:18px">
+        <div class="agree-box" onclick="toggleAgree()">
+          <input type="checkbox" id="agreeCheck">
+          <label for="agreeCheck">Li e concordo integralmente com os termos e condições deste contrato de prestação de serviços.</label>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(2)">← Voltar</button>
+      <button class="btn-next" id="btnSign" onclick="goStep(4)" disabled>Assinar contrato →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 4 - ASSINATURA -->
+  <div class="panel" id="panel4">
+    <div class="card">
+      <div class="card-title">Assinatura Digital</div>
+      <div class="card-sub">Assine o contrato digitalmente. Escolha como prefere assinar.</div>
+
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="setTab('draw')">✍️ Assinar à mão livre</button>
+        <button class="sig-tab" onclick="setTab('type')">⌨️ Digitar nome</button>
+        <button class="sig-tab" onclick="setTab('model')">🔤 Escolher modelo</button>
+      </div>
+
+      <!-- DRAW -->
+      <div id="tabDraw">
+        <div class="canvas-container">
+          <canvas id="sigCanvas"></canvas>
+          <div class="canvas-placeholder" id="canvasHint">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            Assine aqui com o mouse ou dedo
+          </div>
+        </div>
+        <button class="clear-btn" onclick="clearCanvas()">Limpar assinatura</button>
+      </div>
+
+      <!-- TYPE -->
+      <div id="tabType" style="display:none">
+        <input type="text" class="sig-typed-input" id="typedSig" placeholder="Digite seu nome completo" oninput="renderTyped(this.value)">
+        <canvas id="typedCanvas" style="display:none"></canvas>
+      </div>
+
+      <!-- MODELS -->
+      <div id="tabModel" style="display:none">
+        <p style="font-size:13px;color:var(--cinza);margin-bottom:14px">Selecione um estilo de assinatura para o seu nome</p>
+        <div class="sig-models" id="sigModels"><!-- preenchido via JS --></div>
+        <canvas id="modelCanvas" style="display:none"></canvas>
+      </div>
+    </div>
+
+    <div class="card" id="summaryCard">
+      <div class="card-title">Resumo da Contratação</div>
+      <div id="summaryContent"></div>
+    </div>
+
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Local e data da assinatura</label>
+          <input type="text" id="localAssinatura" placeholder="Nova União/MG">
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="dataAssinatura">
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(3)">← Voltar</button>
+      <button class="btn-next" onclick="finalizar()">✅ Finalizar e baixar PDF</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="panel" id="panelSuccess">
+    <div class="card">
+      <div class="success-screen">
+        <div class="success-icon">✅</div>
+        <h2>Contrato assinado com sucesso!</h2>
+        <p>Seu contrato foi gerado e está pronto para download. Enviaremos uma cópia ao e-mail cadastrado em breve.</p>
+        <button class="download-btn" onclick="downloadPDF()">⬇️ Baixar contrato em PDF</button>
+        <br>
+        <div class="contract-id" id="contractIdDisplay"></div>
+        <br>
+        <div style="display:flex;justify-content:center;gap:32px;margin:16px auto;max-width:500px;flex-wrap:wrap">
+          <div style="text-align:center;border-top:1.5px solid #ccc;padding-top:10px;min-width:180px">
+            <img id="previewClienteSig" style="height:54px;max-width:200px;display:block;margin:0 auto 6px">
+            <div style="font-size:12px;color:#888">Assinatura do Contratante</div>
+          </div>
+          <div style="text-align:center;border-top:1.5px solid #ccc;padding-top:10px;min-width:180px">
+            <img id="previewCarolineSig" style="height:54px;max-width:200px;display:block;margin:0 auto 6px">
+            <div style="font-size:12px;color:#888">Assinatura da Contratada</div>
+          </div>
+        </div>
+        <br><br>
+        <a href="https://wa.me/553128880350?text=Ol%C3%A1!+Acabei+de+assinar+o+contrato+digital.+Podemos+iniciar+o+onboarding%3F" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:12px 22px;border-radius:100px;font-size:14px;font-weight:600;text-decoration:none;margin-top:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Falar com a equipe no WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+// STATE
+const state = {
+  step: 1,
+  period: null,
+  plan: null,
+  sigMode: 'draw',
+  sigData: null,
+  agreed: false
+};
+
+const addonData = {
+  sabado:      { name: 'Atendimento aos Sábados (8h–18h)',  price: 400 },
+  confirmacao: { name: 'Confirmação Ativa 24h Antes',        price: 300 },
+  campanha:    { name: 'Campanhas de Retorno Mensal',        price: 200 },
+  noturno:     { name: 'Atendimento Noturno (18h–21h)',      price: 350 },
+  pesquisa:    { name: 'Pesquisa de Satisfação Pós-Consulta',price: 150 },
+  faltas:      { name: 'Reagendamento Ativo de Faltas',      price: 200 },
+};
+state.addons = {};
+
+const planData = {
+  essencial: { name: 'Essencial', price: 497, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Respostas a dúvidas frequentes','Triagem básica de pacientes'] },
+  profissional: { name: 'Profissional', price: 797, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Confirmações ativas 24h antes','Triagem completa de pacientes','Relatório semanal de atendimentos'] },
+  clinica: { name: 'Clínica', price: 1197, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Confirmações ativas 24h antes','Triagem completa de pacientes','Relatório semanal de atendimentos','Reunião mensal de acompanhamento'] }
+};
+
+// NAVIGATION
+function goStep(n) {
+  if (n === 2 && !validateStep1()) return;
+  if (n === 3) {
+    if (!state.period) { alert('Selecione o tipo de contratação.'); return; }
+    if (!state.plan) { alert('Selecione um plano.'); return; }
+    buildContract();
+  }
+  if (n === 4) {
+    if (!state.agreed) { alert('Você precisa concordar com os termos do contrato.'); return; }
+    buildSummary();
+    buildSigModels();
+    document.getElementById('dataAssinatura').valueAsDate = new Date();
+  }
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel' + n).classList.add('active');
+  document.querySelectorAll('.step-item').forEach(s => {
+    const sn = parseInt(s.dataset.step);
+    s.classList.remove('active','done');
+    if (sn === n) s.classList.add('active');
+    else if (sn < n) s.classList.add('done');
+  });
+  state.step = n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validateStep1() {
+  const fields = ['nomeCliente','docCliente','emailCliente','telCliente','endCliente','nomeClinica'];
+  for (const f of fields) {
+    if (!document.getElementById(f).value.trim()) {
+      alert('Preencha todos os campos obrigatórios.');
+      document.getElementById(f).focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+// PERIOD & PLAN
+function selectPeriod(p) {
+  state.period = p;
+  document.getElementById('pTeste').classList.toggle('selected', p==='teste');
+  document.getElementById('pMensal').classList.toggle('selected', p==='mensal');
+  document.getElementById('setupInfo').style.display = p==='mensal' ? 'block' : 'none';
+}
+
+function toggleAddon(key) {
+  state.addons = state.addons || {};
+  state.addons[key] = !state.addons[key];
+  const el = document.getElementById('addon' + key.charAt(0).toUpperCase() + key.slice(1));
+  const check = document.getElementById('check' + key.charAt(0).toUpperCase() + key.slice(1));
+  el.classList.toggle('selected', state.addons[key]);
+  check.innerHTML = state.addons[key] ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+  updateAddonTotal();
+}
+window.toggleAddon = toggleAddon;
+
+function updateAddonTotal() {
+  const selected = Object.entries(state.addons || {}).filter(([,v])=>v);
+  const extra = selected.reduce((sum,[k])=>sum+(addonData[k]?.price||0),0);
+  const base = state.plan ? planData[state.plan].price : 0;
+  const totalEl = document.getElementById('addonTotal');
+  const totalVal = document.getElementById('addonTotalVal');
+  if (selected.length > 0 && base > 0) {
+    totalEl.style.display = 'block';
+    totalVal.textContent = 'R$ ' + (base + extra).toLocaleString('pt-BR') + ',00';
+  } else {
+    totalEl.style.display = 'none';
+  }
+}
+
+function selectPlan(p) {
+  state.plan = p;
+  ['essencial','profissional','clinica'].forEach(id => {
+    document.getElementById('plan' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('selected', id===p);
+  });
+  updateAddonTotal();
+}
+
+// AGREE
+function toggleAgree() {
+  state.agreed = !document.getElementById('agreeCheck').checked;
+  document.getElementById('agreeCheck').checked = !state.agreed;
+  state.agreed = document.getElementById('agreeCheck').checked;
+  document.getElementById('btnSign').disabled = !state.agreed;
+}
+
+// CONTRACT BUILD
+function buildContract() {
+  const nome = document.getElementById('nomeCliente').value;
+  const doc = document.getElementById('docCliente').value;
+  const email = document.getElementById('emailCliente').value;
+  const end = document.getElementById('endCliente').value;
+  const clinica = document.getElementById('nomeClinica').value;
+  const p = planData[state.plan];
+  const isTeste = state.period === 'teste';
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const valorSetup = state.period === 'mensal' ? 'R$ 400,00' : 'isento';
+
+  document.getElementById('contractText').innerHTML = `
+<h3>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ATENDIMENTO DIGITAL</h3>
+<p><strong>Contrato nº:</strong> MR-${Date.now().toString().slice(-6)}&nbsp;&nbsp;&nbsp;<strong>Data:</strong> ${hoje}</p>
+
+<h3>CLÁUSULA 1 – DAS PARTES</h3>
+<p><strong>CONTRATADA:</strong> Caroline Inacia Pinto, inscrita no CNPJ sob o nº <strong>61.934.682/0001-02</strong>, com sede na Rua F, 322, Sol Nascente, Nova União/MG, responsável pelo serviço <strong>Minha Recepcionista</strong>.</p>
+<p><strong>CONTRATANTE:</strong> ${nome}, portador(a) do CPF/CNPJ nº ${doc}, e-mail ${email}, endereço ${end}, doravante denominado(a) CONTRATANTE, representando a clínica/consultório <strong>${clinica}</strong>.</p>
+
+<h3>CLÁUSULA 2 – DO OBJETO</h3>
+<p>O presente contrato tem por objeto a prestação de serviços de atendimento humanizado via WhatsApp em nome da clínica do CONTRATANTE, conforme plano selecionado, incluindo:</p>
+<ul>
+${p.pros.map(s => `<li>${s}</li>`).join('')}
+</ul>
+
+<h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
+<p><strong>Plano contratado:</strong> ${p.name}</p>
+${isTeste ? `
+<div class="highlight">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo ao CONTRATANTE. Ao final do período de teste, o CONTRATANTE poderá optar por continuar com a contratação mensal ou encerrar sem ônus.</div>
+<p><strong>Valor mensal após o período de teste:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
+<div class="highlight">⚠️ <strong>Taxa de implantação (setup):</strong> Caso o CONTRATANTE opte pela contratação mensal após o período de teste, será cobrada uma taxa única de <strong>R$ 400,00</strong> na ativação do plano. Este valor cobre o onboarding completo, configuração do roteiro personalizado e integração com a agenda da clínica. A taxa <strong>não é cobrada durante o período de teste</strong>.</div>
+` : `
+<p><strong>Valor mensal:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
+<p><strong>Taxa de setup (implantação):</strong> R$ 400,00 — pagamento único na ativação. Inclui onboarding completo e roteiro personalizado.</p>
+`}
+${(()=>{
+  const sel = Object.entries(state.addons||{}).filter(([,v])=>v);
+  if(!sel.length) return '';
+  const extra = sel.reduce((s,[k])=>s+(addonData[k]?.price||0),0);
+  const base = planData[state.plan].price;
+  const lines = sel.map(([k])=>`<li>${addonData[k].name}: + R$ ${addonData[k].price.toLocaleString('pt-BR')},00/mês</li>`).join('');
+  return `<p><strong>Serviços adicionais contratados:</strong></p><ul>${lines}</ul><p><strong>Valor total mensal (plano + adicionais):</strong> R$ ${(base+extra).toLocaleString('pt-BR')},00/mês</p>`;
+})()}
+<p>O pagamento será realizado mensalmente, via Pix, boleto ou cartão de crédito, com vencimento no dia de início de cada ciclo.</p>
+
+<h3>CLÁUSULA 4 – DA VIGÊNCIA E RENOVAÇÃO</h3>
+<p>O contrato vigorará por prazo indeterminado a partir da data de assinatura, renovando-se automaticamente mês a mês.</p>
+
+<h3>CLÁUSULA 5 – DO CANCELAMENTO</h3>
+<div class="highlight"><strong>Cancelamento:</strong> Qualquer das partes pode encerrar o contrato mediante aviso prévio de <strong>15 (quinze) dias</strong>, sem multa rescisória, por escrito via e-mail ou WhatsApp. O CONTRATANTE será atendido normalmente durante o período de aviso.</div>
+
+<h3>CLÁUSULA 6 – DAS OBRIGAÇÕES DA CONTRATADA</h3>
+<ul>
+<li>Realizar o atendimento de segunda a sexta-feira, das 8h às 18h, exceto feriados nacionais;</li>
+<li>Manter sigilo absoluto sobre informações dos pacientes (LGPD – Lei 13.709/2018);</li>
+<li>Atender com a identidade e linguagem da clínica, conforme roteiro acordado;</li>
+<li>Encaminhar à equipe da clínica situações fora do escopo do roteiro;</li>
+<li>Enviar relatório semanal de atendimentos (planos Profissional e Clínica).</li>
+</ul>
+
+<h3>CLÁUSULA 7 – DAS OBRIGAÇÕES DO CONTRATANTE</h3>
+<ul>
+<li>Fornecer acesso ao WhatsApp Business e ao sistema de agenda da clínica;</li>
+<li>Manter o pagamento em dia conforme periodicidade acordada;</li>
+<li>Informar com antecedência qualquer alteração de agenda, férias ou mudanças operacionais;</li>
+<li>Colaborar na elaboração e atualização do roteiro de atendimento.</li>
+</ul>
+
+<h3>CLÁUSULA 8 – DA CONFIDENCIALIDADE E LGPD</h3>
+<p>A CONTRATADA compromete-se a tratar os dados pessoais de pacientes e colaboradores da clínica com total sigilo, utilizando-os exclusivamente para execução dos serviços, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018).</p>
+
+<h3>CLÁUSULA 9 – DA LIMITAÇÃO DE RESPONSABILIDADE</h3>
+<p>A CONTRATADA não se responsabiliza por perdas decorrentes de informações incorretas fornecidas pelo CONTRATANTE, falhas no sistema de agenda de terceiros, ou por decisões clínicas tomadas com base nos atendimentos realizados.</p>
+
+<h3>CLÁUSULA 10 – DO FORO</h3>
+<p>As partes elegem o foro da Comarca de Belo Horizonte/MG para dirimir quaisquer controvérsias decorrentes deste instrumento, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
+
+<p style="margin-top:20px;font-size:12px;color:#888">Documento gerado eletronicamente por Minha Recepcionista | CNPJ 61.934.682/0001-02 | minharecepcionista.com.br</p>
+  `;
+}
+
+// SUMMARY
+function buildSummary() {
+  const p = planData[state.plan];
+  const isTeste = state.period === 'teste';
+  document.getElementById('summaryContent').innerHTML = `
+    <div class="summary-row"><span class="summary-label">Contratante</span><span>${document.getElementById('nomeCliente').value}</span></div>
+    <div class="summary-row"><span class="summary-label">Clínica</span><span>${document.getElementById('nomeClinica').value}</span></div>
+    <div class="summary-row"><span class="summary-label">Tipo</span><span>${isTeste ? '7 dias gratuitos + mensal' : 'Contratação mensal'}</span></div>
+    <div class="summary-row"><span class="summary-label">Plano</span><span>${p.name}</span></div>
+    ${!isTeste ? `<div class="summary-row"><span class="summary-label">Setup (único)</span><span>R$ 400,00</span></div>` : ''}
+    <div class="summary-row"><span class="summary-label">Valor mensal</span><span>R$ ${p.price.toLocaleString('pt-BR')},00/mês</span></div>
+  `;
+}
+
+// SIGNATURE
+const SIG_FONTS = [
+  { label: 'Clássica', font: 'Georgia, serif', style: 'normal' },
+  { label: 'Cursiva', font: "'Brush Script MT', cursive", style: 'italic' },
+  { label: 'Elegante', font: "'Palatino Linotype', serif", style: 'italic' },
+  { label: 'Moderna', font: "Garamond, serif", style: 'normal' },
+  { label: 'Serifada', font: "'Times New Roman', serif", style: 'italic' },
+  { label: 'Formal', font: "'Book Antiqua', serif", style: 'normal' }
+];
+
+let isDrawing = false, lastX = 0, lastY = 0;
+
+function initCanvas() {
+  const canvas = document.getElementById('sigCanvas');
+  const container = canvas.parentElement;
+  canvas.width = container.offsetWidth;
+  canvas.height = container.offsetHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if (e.touches) {
+      return [(e.touches[0].clientX - rect.left) * scaleX, (e.touches[0].clientY - rect.top) * scaleY];
+    }
+    return [(e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY];
+  }
+
+  canvas.addEventListener('mousedown', e => { isDrawing = true; [lastX, lastY] = getPos(e); document.getElementById('canvasHint').style.display='none'; });
+  canvas.addEventListener('mousemove', e => {
+    if (!isDrawing) return;
+    const [x, y] = getPos(e);
+    ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke();
+    [lastX, lastY] = [x, y];
+  });
+  canvas.addEventListener('mouseup', () => { isDrawing = false; state.sigData = canvas.toDataURL(); });
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; [lastX, lastY] = getPos(e); document.getElementById('canvasHint').style.display='none'; }, {passive:false});
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const [x, y] = getPos(e);
+    ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke();
+    [lastX, lastY] = [x, y];
+  }, {passive:false});
+  canvas.addEventListener('touchend', () => { isDrawing = false; state.sigData = canvas.toDataURL(); });
+}
+
+function clearCanvas() {
+  const canvas = document.getElementById('sigCanvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  state.sigData = null;
+  document.getElementById('canvasHint').style.display = 'block';
+}
+
+function setTab(tab) {
+  state.sigMode = tab;
+  document.querySelectorAll('.sig-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['draw','type','model'][i] === tab);
+  });
+  document.getElementById('tabDraw').style.display = tab==='draw' ? 'block' : 'none';
+  document.getElementById('tabType').style.display = tab==='type' ? 'block' : 'none';
+  document.getElementById('tabModel').style.display = tab==='model' ? 'block' : 'none';
+  if (tab === 'draw') setTimeout(initCanvas, 50);
+  if (tab === 'model') buildSigModels();
+}
+
+function renderTyped(val) {
+  const canvas = document.getElementById('typedCanvas');
+  canvas.width = 500; canvas.height = 100;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 500, 100);
+  ctx.font = "italic 42px 'Cormorant Garamond', Georgia, serif";
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(val, 250, 52);
+  state.sigData = val ? canvas.toDataURL() : null;
+}
+
+function buildSigModels() {
+  const nome = document.getElementById('nomeCliente').value || 'Sua Assinatura';
+  const container = document.getElementById('sigModels');
+  container.innerHTML = '';
+  SIG_FONTS.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'sig-model';
+    div.id = 'sigModel' + i;
+    div.onclick = () => selectModel(i, nome, f);
+    div.innerHTML = `<span style="font-family:${f.font};font-style:${f.style};font-size:20px;color:#1a1a1a">${nome}</span><small>${f.label}</small>`;
+    container.appendChild(div);
+  });
+}
+
+function selectModel(idx, nome, f) {
+  document.querySelectorAll('.sig-model').forEach(m => m.classList.remove('selected'));
+  document.getElementById('sigModel' + idx).classList.add('selected');
+  const canvas = document.getElementById('modelCanvas');
+  canvas.width = 500; canvas.height = 100;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 500, 100);
+  ctx.font = `${f.style} 40px ${f.font}`;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(nome, 250, 52);
+  state.sigData = canvas.toDataURL();
+}
+
+// ── FIREBASE ────────────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJ22iShszwMw3mVHLrkLgpbFRRHrV_tMA",
+  authDomain: "contrato-2af5f.firebaseapp.com",
+  projectId: "contrato-2af5f",
+  storageBucket: "contrato-2af5f.firebasestorage.app",
+  messagingSenderId: "363926701528",
+  appId: "1:363926701528:web:6f7682757c647adc501ead"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// Expor funções globais para onclick no HTML
+window.goStep = goStep;
+window.selectPeriod = selectPeriod;
+window.selectPlan = selectPlan;
+window.toggleAgree = toggleAgree;
+window.setTab = setTab;
+window.clearCanvas = clearCanvas;
+window.renderTyped = renderTyped;
+window.downloadPDF = downloadPDF;
+
+// ── GERAR HTML DO CONTRATO PARA PDF ─────────────────────────
+function buildPDFHtml(contractId) {
+  const nome = document.getElementById('nomeCliente').value;
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const local = document.getElementById('localAssinatura').value || 'Nova União/MG';
+  const contractText = document.getElementById('contractText').innerHTML;
+  const sigImg = state.sigData ? `<img src="${state.sigData}" style="height:70px;max-width:260px">` : '';
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Contrato – Minha Recepcionista</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+body{font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:720px;margin:0 auto;padding:40px 32px;font-size:13px;line-height:1.8}
+h3{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;margin:18px 0 6px;border-bottom:1px solid #e0e0e0;padding-bottom:4px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #0F6E56}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;color:#0F6E56;font-weight:600}
+.sig-area{display:flex;justify-content:space-between;margin-top:48px;gap:40px}
+.sig-block{flex:1;border-top:1.5px solid #1a1a1a;padding-top:10px;font-size:12px;color:#444}
+.highlight{background:#e1f5ee;border-left:3px solid #0F6E56;padding:8px 12px;margin:8px 0;border-radius:0 4px 4px 0}
+ul{margin:4px 0 10px 16px}
+@media print{body{padding:20px}}
+</style></head><body>
+<div class="header">
+  <div><div class="logo">minharecepcionista</div><div style="font-size:11px;color:#888;margin-top:2px">minharecepcionista.com.br · CNPJ 61.934.682/0001-02</div></div>
+  <div style="text-align:right;font-size:12px;color:#888">Protocolo: ${contractId}<br>${hoje}</div>
+</div>
+${contractText}
+<div class="sig-area">
+  <div class="sig-block">
+    ${sigImg}
+    <p><strong>${nome}</strong><br>CONTRATANTE</p>
+    <p>${local}, ${hoje}</p>
+  </div>
+  <div class="sig-block">
+    <img src="${window._carolineSig || ''}" style="height:70px;max-width:280px;display:block;margin-bottom:2px">
+    <p><strong>Caroline Inacia Pinto</strong><br>CONTRATADA – Minha Recepcionista<br>CNPJ 61.934.682/0001-02</p>
+  </div>
+</div>
+</body></html>`;
+}
+
+// ── FINALIZAR ────────────────────────────────────────────────
+async function finalizar() {
+  if (!state.sigData) { alert('Por favor, assine o contrato antes de finalizar.'); return; }
+
+  const btn = document.querySelector('#panel4 .btn-next');
+  btn.disabled = true;
+  btn.textContent = '⏳ Salvando...';
+
+  const contractId = 'MR-' + Date.now().toString().slice(-6);
+  window._contractId = contractId;
+
+  let saveStatus = '';
+  try {
+    // Salvar tudo no Firestore (sem Storage — sem CORS)
+    await addDoc(collection(db, 'contratos'), {
+      protocolo: contractId,
+      criadoEm: serverTimestamp(),
+      data_legivel: new Date().toLocaleString('pt-BR'),
+      nome: document.getElementById('nomeCliente').value,
+      cpf_cnpj: document.getElementById('docCliente').value,
+      email: document.getElementById('emailCliente').value,
+      telefone: document.getElementById('telCliente').value,
+      endereco: document.getElementById('endCliente').value,
+      clinica: document.getElementById('nomeClinica').value,
+      especialidade: document.getElementById('especialidade').value,
+      sistema_agenda: document.getElementById('sistemaAgenda').value,
+      periodo: state.period === 'teste' ? '7 dias grátis' : 'Mensal',
+      plano: planData[state.plan].name,
+      valor_mensal: 'R$ ' + planData[state.plan].price.toLocaleString('pt-BR') + ',00',
+      setup: state.period === 'mensal' ? 'R$ 400,00' : 'Isento',
+      local_assinatura: document.getElementById('localAssinatura').value || 'Nova União/MG',
+      adicionais: Object.entries(state.addons||{}).filter(([,v])=>v).map(([k])=>addonData[k].name).join(', ') || 'Nenhum',
+      valor_total: 'R$ ' + (planData[state.plan].price + Object.entries(state.addons||{}).filter(([,v])=>v).reduce((s,[k])=>s+(addonData[k]?.price||0),0)).toLocaleString('pt-BR') + ',00',
+      modo_assinatura: state.sigMode,
+      assinatura_img: state.sigData  // base64 da assinatura salvo direto no Firestore
+    });
+    saveStatus = '✅ Contrato salvo no Firebase com sucesso!';
+  } catch (e) {
+    console.error('Firebase erro:', e);
+    saveStatus = '⚠️ Erro ao salvar: ' + e.message;
+  }
+
+  document.getElementById('contractIdDisplay').innerHTML =
+    `Protocolo: <strong>${contractId}</strong><br><span style="font-size:12px;font-weight:400">${saveStatus}</span>`;
+
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panelSuccess').classList.add('active');
+  document.querySelectorAll('.step-item').forEach(s => s.classList.add('done'));
+
+  // Mostrar preview das assinaturas
+  if (state.sigData) document.getElementById('previewClienteSig').src = state.sigData;
+  if (window._carolineSig) document.getElementById('previewCarolineSig').src = window._carolineSig;
+
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  btn.disabled = false;
+  btn.textContent = '✅ Finalizar e baixar PDF';
+}
+window.finalizar = finalizar;
+
+// DOWNLOAD PDF (print-based)
+function downloadPDF() {
+  const html = buildPDFHtml(window._contractId || 'MR-000000');
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 800);
+}
+
+// INIT
+setTimeout(initCanvas, 200);
+document.getElementById('dataAssinatura').valueAsDate = new Date();
+
+// Gerar assinatura cursiva da Caroline (CONTRATADA)
+function generateCarolineSig() {
+  const c = document.createElement('canvas');
+  c.width = 500; c.height = 140;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  // Sombra delicada
+  ctx.shadowColor = 'rgba(15,70,56,0.13)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetY = 2;
+
+  // "C" maiúsculo floreado — traço inicial decorativo
+  ctx.beginPath();
+  ctx.moveTo(18, 38);
+  ctx.bezierCurveTo(6, 22, 2, 8, 22, 4);
+  ctx.bezierCurveTo(38, 1, 52, 10, 46, 22);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Letra principal "Carol" estilo caligrafia de casamento
+  ctx.shadowBlur = 3;
+  ctx.font = "italic 58px 'Brush Script MT', 'Segoe Script', cursive";
+  ctx.fillStyle = '#1a1a2e';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Carol', 14, 90);
+
+  // Floreado inferior — traço que sai do final do "l"
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  // medida do texto para posicionar o floreado
+  const w = ctx.measureText('Carol').width;
+  ctx.moveTo(14 + w - 4, 88);
+  ctx.bezierCurveTo(14 + w + 18, 82, 14 + w + 40, 102, 14 + w + 24, 112);
+  ctx.bezierCurveTo(14 + w + 10, 120, 14 + w - 10, 116, 14 + w + 4, 108);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Sublinhado ondulado elegante embaixo do nome
+  ctx.beginPath();
+  ctx.moveTo(10, 104);
+  ctx.bezierCurveTo(50, 98, 120, 112, 200, 106);
+  ctx.bezierCurveTo(260, 101, 300, 110, 14 + w + 10, 107);
+  ctx.strokeStyle = 'rgba(15,110,86,0.35)';
+  ctx.lineWidth = 1.0;
+  ctx.stroke();
+
+  // Pontinho decorativo no início (floreado inicial)
+  ctx.beginPath();
+  ctx.arc(8, 92, 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(15,110,86,0.3)';
+  ctx.fill();
+
+  window._carolineSig = c.toDataURL();
+}
+generateCarolineSig();
+</script>
+</body>
+</html>
+
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --verde:#0F6E56;--verde-claro:#1D9E75;--verde-bg:#E1F5EE;--verde-borda:#9FE1CB;
