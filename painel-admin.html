@@ -57,7 +57,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--preto);background:var(--areia)
 .results-count{font-size:13px;color:var(--cinza);margin-left:auto}
 
 /* TABLE */
-.table-wrap{background:#fff;border:1px solid var(--borda);border-radius:16px;overflow:hidden}
+.table-wrap{background:#fff;border:1px solid var(--borda);border-radius:16px;overflow-x:auto}
 .table-wrap table{width:100%;border-collapse:collapse}
 .table-wrap thead{background:var(--verde)}
 .table-wrap thead th{color:#fff;font-size:12px;font-weight:600;letter-spacing:0.5px;padding:13px 16px;text-align:left;white-space:nowrap}
@@ -445,12 +445,18 @@ function renderTabela(lista) {
     <td><span class="badge ${badgePlano[c.plano]||''}">${c.plano||'—'}</span></td>
     <td style="font-weight:600">${c.valor_total||c.valor_mensal||'—'}<br>${c.adicionais && c.adicionais!=='Nenhum' ? `<span style='font-size:11px;color:#888;font-weight:400'>${c.adicionais.split(', ').length} adicional(is)</span>` : ''}</td>
     <td><div style="display:flex;gap:6px">
-      ${c.ativo ? `<span class='status-badge status-ativo'>● Ativo</span>` : c.periodo==='7 dias grátis' ? `<span class='status-badge status-teste'>● Teste</span>` : `<span class='status-badge status-inativo'>● Inativo</span>`}
-      <div style='display:flex;gap:4px;margin-top:4px'>
-        <button class='btn-view' onclick='abrirModal(${i})'>Ver</button>
-        <button class='btn-pdf' onclick='gerarPDF(${i})'>PDF</button>
-        ${c.ativo ? `<button class='btn-ativo' onclick='abrirCobrancas(${i})'>💰 ${calcProxCobranca(c)}</button>` : `<button class='btn-ativar' onclick='ativarContrato("${c.id}")'>Ativar</button>`}
-        <button class='btn-del' onclick='excluirContrato("${c.id}","${(c.nome||'').replace(/'/g,"")}")'>✕</button>
+      <div style='display:flex;flex-direction:column;gap:5px;min-width:190px'>
+        <div style='display:flex;gap:4px;align-items:center'>
+          ${c.ativo ? `<span class='status-badge status-ativo'>● Ativo</span>` : c.periodo==='7 dias grátis' ? `<span class='status-badge status-teste'>● Teste</span>` : `<span class='status-badge status-inativo'>● Inativo</span>`}
+          <button class='btn-del' onclick='excluirContrato("${c.id}","${(c.nome||'').replace(/'/g,"")}")' title='Excluir contrato'>✕</button>
+        </div>
+        <div style='display:flex;gap:4px;flex-wrap:wrap'>
+          <button class='btn-view' onclick='abrirModal(${i})'>Ver</button>
+          <button class='btn-pdf' onclick='gerarPDF(${i})'>PDF</button>
+          ${c.ativo
+            ? `<button class='btn-ativo' onclick='abrirCobrancas(${i})' title='Ver cobranças'>💰 ${calcProxCobranca(c)}</button>`
+            : `<button class='btn-ativar' onclick='ativarContrato("${c.id}")'>✅ Ativar</button>`}
+        </div>
       </div>
     </div></td>
   </tr>`).join('');
@@ -459,7 +465,7 @@ function renderTabela(lista) {
     <thead><tr>
       <th>Protocolo</th><th>Data</th><th>Cliente / Clínica</th>
       <th>E-mail</th><th>Telefone</th><th>Período</th>
-      <th>Plano</th><th>Valor</th><th>Ações</th>
+      <th>Plano</th><th>Valor</th><th style="min-width:200px">Ações</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
