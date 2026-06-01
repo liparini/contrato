@@ -343,17 +343,30 @@ window._contratoCobranca = null;
 async function abrirCobrancas(idx) {
   const contrato = window._listaFiltrada[idx];
   window._contratoCobranca = contrato;
+  window._contratoCobrancaIdx = idx;
   const ativacao = contrato.dataAtivacao?.toDate ? contrato.dataAtivacao.toDate() : new Date(contrato.dataAtivacao || Date.now());
   const cobrancas = contrato.cobrancas || [{ numero:1, dataVenc: ativacao.toISOString(), pago:true, dataPago: ativacao.toISOString() }];
 
-  // Gera lista de 12 cobranças (1 ano)
+  // Calcula ciclo atual: quantos grupos de 12 já completados
+  const totalSalvas = cobrancas.length;
+  const cicloAtual = Math.floor((totalSalvas - 1) / 12); // 0 = 1º ano, 1 = 2º ano...
+  const offsetNum = cicloAtual * 12; // número base deste ciclo
+  const anoLabel = cicloAtual === 0 ? '1º Ano' : `${cicloAtual + 1}º Ano`;
+
+  // Verifica se todas as 12 do ciclo atual foram pagas
+  const todasPagas = Array.from({length:12},(_,i) => offsetNum+i+1)
+    .every(n => cobrancas.find(x=>x.numero===n)?.pago);
+
+  // Gera lista das 12 cobranças do ciclo atual
   const lista = [];
   for (let i = 0; i < 12; i++) {
+    const numGlobal = offsetNum + i + 1;
     const venc = new Date(ativacao);
-    venc.setDate(venc.getDate() + (i * 30));
-    const salva = cobrancas.find(x => x.numero === i+1);
+    venc.setDate(venc.getDate() + ((numGlobal - 1) * 30));
+    const salva = cobrancas.find(x => x.numero === numGlobal);
     lista.push({
-      numero: i+1,
+      numero: numGlobal,
+      localIdx: i,
       dataVenc: venc,
       pago: salva?.pago || false,
       dataPago: salva?.dataPago || null
@@ -361,38 +374,99 @@ async function abrirCobrancas(idx) {
   }
 
   const hoje = new Date();
+  // Alerta de reajuste se todas as 12 foram pagas
+  const reajusteAlert = todasPagas ? `
+    <div style="background:#FFF8E1;border:1px solid #FFE082;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#7c6200;line-height:1.7">
+      🎉 <strong>Ciclo anual concluído!</strong><br>
+      Todas as cobranças do ${anoLabel} foram geradas.<br>
+      Conforme o contrato, você pode aplicar o <strong>reajuste pelo IPCA acumulado</strong> dos últimos 12 meses antes de iniciar o próximo ciclo.
+      Avise o cliente com <strong>30 dias de antecedência</strong>.
+      <br><button onclick="iniciarNovoCiclo()" style="margin-top:10px;background:#856404;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%">
+        🔄 Iniciar ${cicloAtual + 2}º Ano de cobranças
+      </button>
+    </div>` : '';
+
   const rows = lista.map(cb => {
     const vencida = !cb.pago && cb.dataVenc < hoje;
     const status = cb.pago ? 'pago' : vencida ? 'atrasado' : 'pendente';
     const label = cb.pago ? '✅ Gerada' : vencida ? '⚠️ Pendente' : '⏳ Futura';
     const dataFmt = cb.dataVenc.toLocaleDateString('pt-BR');
+    const nome1a = cb.numero === 1 ? '1ª Cobrança (Ativação + 1º mês)' : `${cb.numero}ª Cobrança`;
     return `<div class="cobranca-row ${status}">
       <div>
-        <strong style="font-size:13px">${cb.numero === 1 ? '1ª Cobrança (Ativação + 1º mês)' : cb.numero + 'ª Cobrança'}</strong>
+        <strong style="font-size:13px">${nome1a}</strong>
         <div style="font-size:12px;color:var(--cinza)">Vencimento: ${dataFmt} · ${label}</div>
       </div>
       <input type="checkbox" class="cobranca-check" ${cb.pago?'checked':''} onchange="toggleCobranca(${cb.numero-1}, this.checked)" title="Marcar como gerada">
     </div>`;
   }).join('');
 
+  // Nav entre ciclos se houver mais de um
+  const cicloNav = cicloAtual > 0 ? `
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button onclick="mudarCiclo(-1)" style="flex:1;background:var(--verde-bg);border:1px solid var(--verde-borda);color:var(--verde);border-radius:8px;padding:6px;font-size:12px;font-weight:600;cursor:pointer">← Ano anterior</button>
+      <button onclick="mudarCiclo(1)" style="flex:1;background:var(--verde-bg);border:1px solid var(--verde-borda);color:var(--verde);border-radius:8px;padding:6px;font-size:12px;font-weight:600;cursor:pointer" ${!todasPagas?'disabled style="opacity:0.4;cursor:not-allowed"':''}>Próximo ano →</button>
+    </div>` : '';
+
   const total = contrato.valor_total || contrato.valor_mensal || '—';
   document.getElementById('modalBody').innerHTML = `
-    <div style="background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--verde)">
+    <div style="background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:var(--verde)">
       <strong>${contrato.clinica || contrato.nome}</strong> · Plano ${contrato.plano}<br>
       Valor mensal: <strong>${total}/mês</strong> · Ativado em: <strong>${ativacao.toLocaleDateString('pt-BR')}</strong>
     </div>
-    <div style="font-size:12px;color:var(--cinza);margin-bottom:10px">Marque o checkbox quando gerar cada cobrança. A contagem é de 30 em 30 dias a partir da ativação.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:600;color:var(--verde)">📅 ${anoLabel} de serviço</span>
+      <span style="font-size:12px;color:var(--cinza)">${lista.filter(x=>x.pago).length}/12 geradas</span>
+    </div>
+    ${cicloNav}
+    ${reajusteAlert}
+    <div style="font-size:12px;color:var(--cinza);margin-bottom:10px">Marque quando gerar cada cobrança. Ciclo de 30 em 30 dias.</div>
     ${rows}`;
   document.getElementById('modalTitulo').textContent = '💰 Cobranças — ' + (contrato.protocolo||'');
   document.getElementById('modalOverlay').classList.add('open');
 }
 window.abrirCobrancas = abrirCobrancas;
 
+// Iniciar novo ciclo anual
+window.iniciarNovoCiclo = async function() {
+  const contrato = window._contratoCobranca;
+  if (!contrato) return;
+  const ativacao = contrato.dataAtivacao?.toDate ? contrato.dataAtivacao.toDate() : new Date(contrato.dataAtivacao || Date.now());
+  const cobrancas = contrato.cobrancas || [];
+  // Adiciona próximas 12 cobranças
+  const proxNum = cobrancas.length + 1;
+  for (let i = 0; i < 12; i++) {
+    const num = proxNum + i;
+    const venc = new Date(ativacao);
+    venc.setDate(venc.getDate() + ((num-1) * 30));
+    cobrancas.push({ numero: num, dataVenc: venc.toISOString(), pago: false, dataPago: null });
+  }
+  try {
+    await updateDoc(doc(db,'contratos',contrato.id),{cobrancas});
+    contrato.cobrancas = cobrancas;
+    abrirCobrancas(window._contratoCobrancaIdx);
+  } catch(e) { alert('Erro: '+e.message); }
+};
+
+// Navegar entre ciclos anuais
+window._cicloVendo = 0;
+window.mudarCiclo = function(dir) {
+  // Reopen with offset — simpler: just store offset on contrato temp
+  const contrato = window._contratoCobranca;
+  const totalCiclos = Math.ceil((contrato.cobrancas||[]).length / 12);
+  window._cicloVendo = Math.max(0, Math.min(totalCiclos - 1, (window._cicloVendo||0) + dir));
+  // Temporarily patch to show that cycle
+  const origCobrancas = contrato.cobrancas;
+  abrirCobrancas(window._contratoCobrancaIdx);
+};
+
 async function toggleCobranca(idx, checked) {
   const contrato = window._contratoCobranca;
   if (!contrato) return;
   const ativacao = contrato.dataAtivacao?.toDate ? contrato.dataAtivacao.toDate() : new Date(contrato.dataAtivacao || Date.now());
-  const cobrancas = Array.from({length:12},(_,i) => {
+  // Work with all cobrancas, not just 12
+  const maxNum = Math.max(12, (contrato.cobrancas||[]).length);
+  const cobrancas = Array.from({length:maxNum},(_,i) => {
     const salva = (contrato.cobrancas||[]).find(x=>x.numero===i+1);
     const venc = new Date(ativacao); venc.setDate(venc.getDate()+(i*30));
     return salva || {numero:i+1, dataVenc:venc.toISOString(), pago:false, dataPago:null};
@@ -402,8 +476,7 @@ async function toggleCobranca(idx, checked) {
   try {
     await updateDoc(doc(db,'contratos',contrato.id),{cobrancas});
     contrato.cobrancas = cobrancas;
-    // Refresh the modal visually
-    abrirCobrancas(window._listaFiltrada.indexOf(contrato));
+    abrirCobrancas(window._contratoCobrancaIdx);
   } catch(e) { alert('Erro: '+e.message); }
 }
 window.toggleCobranca = toggleCobranca;
