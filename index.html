@@ -240,15 +240,10 @@ input::placeholder{color:#bbb}
   <!-- PANEL 2 - PLANO -->
   <div class="panel" id="panel2">
     <div class="card">
-      <div class="card-title">Tipo de Contratação</div>
-      <div class="card-sub">Escolha o período de teste ou contratação mensal.</div>
+      <div class="card-title">Contratação Mensal</div>
+      <div class="card-sub">Plano mensal sem fidelidade. Cancele quando quiser com aviso prévio de 15 dias.</div>
       <div class="period-options">
-        <div class="period-opt" id="pTeste" onclick="selectPeriod('teste')">
-          <div class="period-tag">SEM CUSTO</div>
-          <h4>⏱️ Período de Teste</h4>
-          <p>7 dias gratuitos com todos os recursos do plano escolhido. Sem cobrança, sem fidelidade.</p>
-        </div>
-        <div class="period-opt" id="pMensal" onclick="selectPeriod('mensal')">
+        <div class="period-opt selected" id="pMensal" onclick="selectPeriod('mensal')">
           <h4>📅 Contratação Mensal</h4>
           <p>Plano mensal sem fidelidade. Cancele a qualquer momento com aviso prévio de 15 dias.</p>
         </div>
@@ -465,6 +460,7 @@ const addonData = {
   faltas:      { name: 'Reagendamento Ativo de Faltas',      price: 200 },
 };
 state.addons = {};
+state.period = 'mensal';
 
 const planData = {
   essencial: { name: 'Essencial', price: 497, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Respostas a dúvidas frequentes','Triagem básica de pacientes'] },
@@ -567,7 +563,7 @@ function buildContract() {
   const end = document.getElementById('endCliente').value;
   const clinica = document.getElementById('nomeClinica').value;
   const p = planData[state.plan];
-  const isTeste = state.period === 'teste';
+  const isTeste = false;
   const hoje = new Date().toLocaleDateString('pt-BR');
   const valorSetup = state.period === 'mensal' ? 'R$ 400,00' : 'isento';
 
@@ -587,14 +583,8 @@ ${p.pros.map(s => `<li>${s}</li>`).join('')}
 
 <h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
 <p><strong>Plano contratado:</strong> ${p.name}</p>
-${isTeste ? `
-<div class="highlight">Este contrato inicia com <strong>7 (sete) dias de experiência gratuita</strong>, sem qualquer custo ao CONTRATANTE. Ao final do período de teste, o CONTRATANTE poderá optar por continuar com a contratação mensal ou encerrar sem ônus.</div>
-<p><strong>Valor mensal após o período de teste:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
-<div class="highlight">⚠️ <strong>Taxa de implantação (setup):</strong> Caso o CONTRATANTE opte pela contratação mensal após o período de teste, será cobrada uma taxa única de <strong>R$ 400,00</strong> na ativação do plano. Este valor cobre o onboarding completo, configuração do roteiro personalizado e integração com a agenda da clínica. A taxa <strong>não é cobrada durante o período de teste</strong>.</div>
-` : `
-<p><strong>Valor mensal:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
-<p><strong>Taxa de setup (implantação):</strong> R$ 400,00 — pagamento único na ativação. Inclui onboarding completo e roteiro personalizado.</p>
-`}
+<p><strong>Valor mensal:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês — cobrado de forma <strong>pré-paga</strong> no início de cada ciclo mensal.</p>
+<p><strong>Taxa de implantação (setup):</strong> R$ 400,00 — pagamento único na ativação. Inclui onboarding completo, configuração do roteiro personalizado e integração com a agenda da clínica.</p>
 ${(()=>{
   const sel = Object.entries(state.addons||{}).filter(([,v])=>v);
   if(!sel.length) return '';
@@ -648,7 +638,7 @@ ${(()=>{
 // SUMMARY
 function buildSummary() {
   const p = planData[state.plan];
-  const isTeste = state.period === 'teste';
+  const isTeste = false;
   const addons = Object.entries(state.addons||{}).filter(([,v])=>v);
   const extra = addons.reduce((s,[k])=>s+(addonData[k]?.price||0),0);
   const total = p.price + extra;
