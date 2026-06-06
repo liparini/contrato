@@ -217,7 +217,19 @@ input::placeholder{color:#bbb}
           <input type="text" id="especialidade" placeholder="Ex: Dermatologia, Odontologia">
         </div>
       </div>
-      <div class="form-row full">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Número de profissionais <span class="req">*</span></label>
+          <select id="numProfissionais">
+            <option value="1">1 profissional — Plano Essencial</option>
+            <option value="2">2 profissionais — Plano Profissional</option>
+            <option value="3">3 profissionais — Plano Clínica</option>
+            <option value="4">4 profissionais — Plano Clínica + 1 adicional (R$200)</option>
+            <option value="5">5 profissionais — Plano Clínica + 2 adicionais (R$400)</option>
+            <option value="6+">6 ou mais — solicitar orçamento personalizado</option>
+          </select>
+          <div class="form-hint">A partir do 4º profissional: + R$200,00/mês por profissional</div>
+        </div>
         <div class="form-group">
           <label>Sistema de agenda utilizado</label>
           <select id="sistemaAgenda">
@@ -267,7 +279,7 @@ input::placeholder{color:#bbb}
         <div class="plan-opt" id="planClinica" onclick="selectPlan('clinica')">
           <div class="plan-name">Clínica</div>
           <div class="plan-price">R$1.197<small>/mês</small></div>
-          <div class="plan-features">Até 3 profissionais<br>Reunião mensal<br>Serviço completo</div>
+          <div class="plan-features">Até 3 profissionais<br>Reunião mensal<br>+ R$200/prof. adicional</div>
         </div>
       </div>
       <div id="setupInfo" style="display:none;background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--verde);margin-top:4px">
@@ -584,6 +596,7 @@ ${p.pros.map(s => `<li>${s}</li>`).join('')}
 <h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
 <p><strong>Plano contratado:</strong> ${p.name}</p>
 <p><strong>Valor mensal:</strong> R$ ${p.price.toLocaleString('pt-BR')},00/mês — cobrado de forma <strong>pré-paga</strong> no início de cada ciclo mensal.</p>
+${(()=>{ const np = parseInt(document.getElementById('numProfissionais')?.value||'1'); const extras = Math.max(0, np-3); return extras > 0 ? `<p><strong>Profissionais adicionais:</strong> ${extras} × R$ 200,00 = <strong>R$ ${(extras*200).toLocaleString('pt-BR')},00/mês</strong></p>` : ''; })()}
 <p><strong>Taxa de implantação (setup):</strong> R$ 400,00 — pagamento único na ativação. Inclui onboarding completo, configuração do roteiro personalizado e integração com a agenda da clínica.</p>
 ${(()=>{
   const sel = Object.entries(state.addons||{}).filter(([,v])=>v);
@@ -699,6 +712,12 @@ function buildSummary() {
     <div class="summary-row"><span class="summary-label">Clínica</span><span>${document.getElementById('nomeClinica').value}</span></div>
     <div class="summary-row"><span class="summary-label">Tipo</span><span>${isTeste ? '7 dias gratuitos → mensal' : 'Contratação mensal'}</span></div>
     <div class="summary-row"><span class="summary-label">Plano</span><span>${p.name} — R$ ${p.price.toLocaleString('pt-BR')},00/mês</span></div>
+    ${(()=>{
+      const np = parseInt(document.getElementById('numProfissionais')?.value||'1');
+      const extras = Math.max(0, np-3);
+      if(extras <= 0) return '';
+      return `<div class="summary-row"><span class="summary-label">Profissionais adicionais</span><span>${extras} × R$ 200,00 = R$ ${(extras*200).toLocaleString('pt-BR')},00/mês</span></div>`;
+    })()}
     ${addonRows}
     ${setupRow}
     ${totalRow}
@@ -915,6 +934,7 @@ async function finalizar() {
       plano: planData[state.plan].name,
       valor_mensal: 'R$ ' + planData[state.plan].price.toLocaleString('pt-BR') + ',00',
       setup: state.period === 'mensal' ? 'R$ 400,00' : 'Isento',
+      num_profissionais: document.getElementById('numProfissionais')?.value || '1',
       local_assinatura: document.getElementById('localAssinatura').value || 'Nova União/MG',
       adicionais: Object.entries(state.addons||{}).filter(([,v])=>v).map(([k])=>addonData[k].name).join(', ') || 'Nenhum',
       valor_total: 'R$ ' + (planData[state.plan].price + Object.entries(state.addons||{}).filter(([,v])=>v).reduce((s,[k])=>s+(addonData[k]?.price||0),0)).toLocaleString('pt-BR') + ',00',
