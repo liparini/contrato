@@ -346,8 +346,8 @@ input::placeholder{color:#bbb}
       <div class="card-sub">Leia o contrato completo antes de prosseguir com a assinatura.</div>
       <div class="contract-text" id="contractText"><!-- preenchido via JS --></div>
       <div style="margin-top:18px">
-        <div class="agree-box" onclick="toggleAgree()">
-          <input type="checkbox" id="agreeCheck">
+        <div class="agree-box">
+          <input type="checkbox" id="agreeCheck" onchange="toggleAgree()">
           <label for="agreeCheck">Li e concordo integralmente com os termos e condições deste contrato de prestação de serviços.</label>
         </div>
       </div>
@@ -433,11 +433,11 @@ input::placeholder{color:#bbb}
         <br>
         <div style="display:flex;justify-content:center;gap:32px;margin:16px auto;max-width:500px;flex-wrap:wrap">
           <div style="text-align:center;border-top:1.5px solid #ccc;padding-top:10px;min-width:180px">
-            <img id="previewClienteSig" style="height:54px;max-width:200px;display:block;margin:0 auto 6px">
+            <img id="previewClienteSig" style="max-height:54px;max-width:280px;display:block;margin:0 auto 6px;object-fit:contain">
             <div style="font-size:12px;color:#888">Assinatura do Contratante</div>
           </div>
           <div style="text-align:center;border-top:1.5px solid #ccc;padding-top:10px;min-width:180px">
-            <img id="previewCarolineSig" style="height:54px;max-width:200px;display:block;margin:0 auto 6px">
+            <img id="previewCarolineSig" style="max-height:54px;max-width:280px;display:block;margin:0 auto 6px;object-fit:contain">
             <div style="font-size:12px;color:#888">Assinatura da Contratada</div>
           </div>
         </div>
@@ -561,8 +561,6 @@ function selectPlan(p) {
 
 // AGREE
 function toggleAgree() {
-  state.agreed = !document.getElementById('agreeCheck').checked;
-  document.getElementById('agreeCheck').checked = !state.agreed;
   state.agreed = document.getElementById('agreeCheck').checked;
   document.getElementById('btnSign').disabled = !state.agreed;
 }
@@ -803,14 +801,23 @@ function setTab(tab) {
 
 function renderTyped(val) {
   const canvas = document.getElementById('typedCanvas');
-  canvas.width = 500; canvas.height = 100;
+  canvas.width = 700; canvas.height = 120;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 500, 100);
-  ctx.font = "italic 42px 'Cormorant Garamond', Georgia, serif";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Ajusta o tamanho da fonte automaticamente para caber no canvas
+  let fontSize = 42;
+  const maxWidth = canvas.width - 40;
+  ctx.font = "italic " + fontSize + "px 'Cormorant Garamond', Georgia, serif";
+  while (ctx.measureText(val).width > maxWidth && fontSize > 14) {
+    fontSize -= 2;
+    ctx.font = "italic " + fontSize + "px 'Cormorant Garamond', Georgia, serif";
+  }
+
   ctx.fillStyle = '#1a1a1a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(val, 250, 52);
+  ctx.fillText(val, canvas.width / 2, canvas.height / 2);
   state.sigData = val ? canvas.toDataURL() : null;
 }
 
@@ -875,7 +882,7 @@ function buildPDFHtml(contractId) {
   const hoje = new Date().toLocaleDateString('pt-BR');
   const local = document.getElementById('localAssinatura').value || 'Nova União/MG';
   const contractText = document.getElementById('contractText').innerHTML;
-  const sigImg = state.sigData ? `<img src="${state.sigData}" style="height:70px;max-width:260px">` : '';
+  const sigImg = state.sigData ? `<img src="${state.sigData}" style="max-height:70px;max-width:300px;object-fit:contain">` : '';
   return `<!DOCTYPE html><\/html><head><meta charset="UTF-8">
 <title>Contrato – Minha Recepcionista</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
