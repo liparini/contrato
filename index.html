@@ -52,11 +52,15 @@ input::placeholder{color:#bbb}
 .form-hint{font-size:12px;color:var(--cinza);margin-top:3px}
 
 /* PLAN SELECT */
-.plan-options{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.plan-options{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
 .plan-opt{border:2px solid var(--borda);border-radius:12px;padding:18px 14px;cursor:pointer;transition:all 0.2s;position:relative;text-align:center}
 .plan-opt:hover{border-color:var(--verde-borda);background:var(--verde-bg)}
 .plan-opt.selected{border-color:var(--verde);background:var(--verde-bg)}
+.plan-opt.promo{border-color:#E0B84D}
+.plan-opt.promo:hover{border-color:#E0B84D;background:#FFF8E7}
+.plan-opt.promo.selected{border-color:#C9971F;background:#FFF3D6}
 .plan-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--verde);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;letter-spacing:0.5px;white-space:nowrap}
+.plan-badge.promo{background:#C9971F}
 .plan-name{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cinza);margin-bottom:6px}
 .plan-price{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--preto);line-height:1}
 .plan-price small{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:400;color:var(--cinza)}
@@ -265,6 +269,12 @@ input::placeholder{color:#bbb}
       <div class="card-title">Escolha seu Plano</div>
       <div class="card-sub">Selecione o plano mais adequado para a sua clínica.</div>
       <div class="plan-options">
+        <div class="plan-opt promo" id="planPromocional" onclick="selectPlan('promocional')">
+          <div class="plan-badge promo">PROMOÇÃO</div>
+          <div class="plan-name">Promocional</div>
+          <div class="plan-price">R$497<small>/mês</small></div>
+          <div class="plan-features">Até 1 profissional<br>Seg–Sex, 8h–18h<br>Agendamentos e dúvidas</div>
+        </div>
         <div class="plan-opt" id="planEssencial" onclick="selectPlan('essencial')">
           <div class="plan-name">Essencial</div>
           <div class="plan-price">R$1.397<small>/mês</small></div>
@@ -475,6 +485,7 @@ state.addons = {};
 state.period = 'mensal';
 
 const planData = {
+  promocional: { name: 'Promocional', price: 497, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Respostas a dúvidas frequentes','Triagem básica de pacientes'] },
   essencial: { name: 'Essencial', price: 1397, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Respostas a dúvidas frequentes','Triagem básica de pacientes'] },
   profissional: { name: 'Profissional', price: 1797, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Confirmações ativas 24h antes','Triagem completa de pacientes'] },
   clinica: { name: 'Clínica', price: 1997, pros: ['Atendimento Seg–Sex, 8h–18h','WhatsApp Business da clínica','Agendamentos e cancelamentos','Confirmações ativas 24h antes','Triagem completa de pacientes','Reunião mensal de acompanhamento'] }
@@ -521,7 +532,6 @@ function validateStep1() {
 // PERIOD & PLAN
 function selectPeriod(p) {
   state.period = p;
-  document.getElementById('pTeste').classList.toggle('selected', p==='teste');
   document.getElementById('pMensal').classList.toggle('selected', p==='mensal');
   document.getElementById('setupInfo').style.display = p==='mensal' ? 'block' : 'none';
 }
@@ -553,7 +563,7 @@ function updateAddonTotal() {
 
 function selectPlan(p) {
   state.plan = p;
-  ['essencial','profissional','clinica'].forEach(id => {
+  ['promocional','essencial','profissional','clinica'].forEach(id => {
     document.getElementById('plan' + id.charAt(0).toUpperCase() + id.slice(1)).classList.toggle('selected', id===p);
   });
   updateAddonTotal();
@@ -573,9 +583,7 @@ function buildContract() {
   const end = document.getElementById('endCliente').value;
   const clinica = document.getElementById('nomeClinica').value;
   const p = planData[state.plan];
-  const isTeste = false;
   const hoje = new Date().toLocaleDateString('pt-BR');
-  const valorSetup = state.period === 'mensal' ? 'R$ 400,00' : 'isento';
 
   document.getElementById('contractText').innerHTML = `
 <h3>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ATENDIMENTO DIGITAL</h3>
@@ -592,28 +600,21 @@ ${p.pros.map(s => `<li>${s}</li>`).join('')}
 </ul>
 
 <h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
-<p><strong>Plano contratado:</strong> ${p.name}</p>
 ${(()=>{
   const npNum = Math.max(0, parseInt(document.getElementById('numProfissionais')?.value||'1')-3);
   const profExtra = npNum * 200;
   const addonsExtra = Object.entries(state.addons||{}).filter(([,v])=>v).reduce((s,[k])=>s+(addonData[k]?.price||0),0);
   const total = p.price + profExtra + addonsExtra;
   const addonsLines = Object.entries(state.addons||{}).filter(([,v])=>v).map(([k])=>`<li>${addonData[k].name}: R$ ${addonData[k].price.toLocaleString('pt-BR')},00/mês</li>`).join('');
+  const promoNote = state.plan === 'promocional' ? `<div class="highlight">🎉 <strong>Plano Promocional:</strong> condição especial de lançamento, com as mesmas características e nível de atendimento do Plano Essencial, pelo valor promocional de R$ 497,00/mês.</div>` : '';
   return `
     <p><strong>Plano contratado:</strong> ${p.name} — R$ ${p.price.toLocaleString('pt-BR')},00/mês</p>
+    ${promoNote}
     ${npNum > 0 ? `<p><strong>Profissionais adicionais:</strong> ${npNum} × R$ 200,00 = R$ ${profExtra.toLocaleString('pt-BR')},00/mês</p>` : ''}
     ${addonsLines ? `<p><strong>Serviços adicionais:</strong></p><ul>${addonsLines}</ul>` : ''}
     <p><strong>Valor total mensal:</strong> R$ ${total.toLocaleString('pt-BR')},00/mês — cobrado de forma <strong>pré-paga</strong> no início de cada ciclo mensal.</p>
     <p><strong>Taxa de implantação (setup):</strong> R$ 400,00 — pagamento único na ativação.</p>
     <div class="highlight">💳 <strong>1º pagamento:</strong> R$ ${(total+400).toLocaleString('pt-BR')},00 (valor mensal + taxa de ativação). A partir do 2º mês: R$ ${total.toLocaleString('pt-BR')},00/mês.</div>`;
-})()}
-${(()=>{
-  const sel = Object.entries(state.addons||{}).filter(([,v])=>v);
-  if(!sel.length) return '';
-  const extra = sel.reduce((s,[k])=>s+(addonData[k]?.price||0),0);
-  const base = planData[state.plan].price;
-  const lines = sel.map(([k])=>`<li>${addonData[k].name}: + R$ ${addonData[k].price.toLocaleString('pt-BR')},00/mês</li>`).join('');
-  return `<p><strong>Serviços adicionais contratados:</strong></p><ul>${lines}</ul><p><strong>Valor total mensal (plano + adicionais):</strong> R$ ${(base+extra).toLocaleString('pt-BR')},00/mês</p>`;
 })()}
 <p>O pagamento será realizado mensalmente, via Pix, boleto ou cartão de crédito, com vencimento no dia de início de cada ciclo.</p>
 
@@ -626,6 +627,7 @@ ${(()=>{
 <h3>CLÁUSULA 5-A – DO REAJUSTE ANUAL</h3>
 <p>Os valores dos serviços contratados poderão ser reajustados anualmente, após <strong>12 (doze) meses</strong> de contrato ativo, com base na variação acumulada do <strong>IPCA</strong> (Índice Nacional de Preços ao Consumidor Amplo), divulgado pelo IBGE, referente aos últimos 12 meses.</p>
 <div class="highlight">A CONTRATADA comunicará o reajuste com antecedência mínima de <strong>30 (trinta) dias</strong>, por e-mail ou WhatsApp, informando o percentual aplicado e o novo valor mensal a vigorar. Caso o CONTRATANTE não concorde com o reajuste, poderá cancelar o contrato conforme a Cláusula 5, sem multa.</div>
+${state.plan === 'promocional' ? `<div class="highlight">⚠️ <strong>Condição promocional:</strong> o valor de R$ 497,00/mês é uma condição especial de lançamento e poderá ser revisto pela CONTRATADA a qualquer momento após o término da vigência promocional, mediante comunicação prévia de 30 dias, conforme regras gerais de reajuste desta cláusula.</div>` : ''}
 
 <h3>CLÁUSULA 6 – DAS OBRIGAÇÕES DA CONTRATADA</h3>
 <ul>
@@ -659,7 +661,6 @@ ${(()=>{
 // SUMMARY
 function buildSummary() {
   const p = planData[state.plan];
-  const isTeste = false;
   const addons = Object.entries(state.addons||{}).filter(([,v])=>v);
   const addonExtra = addons.reduce((s,[k])=>s+(addonData[k]?.price||0),0);
 
@@ -941,10 +942,10 @@ async function finalizar() {
       clinica: document.getElementById('nomeClinica').value,
       especialidade: document.getElementById('especialidade').value,
       sistema_agenda: document.getElementById('sistemaAgenda').value,
-      periodo: state.period === 'teste' ? '7 dias grátis' : 'Mensal',
+      periodo: 'Mensal',
       plano: planData[state.plan].name,
       valor_mensal: 'R$ ' + planData[state.plan].price.toLocaleString('pt-BR') + ',00',
-      setup: state.period === 'mensal' ? 'R$ 400,00' : 'Isento',
+      setup: 'R$ 400,00',
       num_profissionais: document.getElementById('numProfissionais')?.value || '1',
       local_assinatura: document.getElementById('localAssinatura').value || 'Nova União/MG',
       adicionais: Object.entries(state.addons||{}).filter(([,v])=>v).map(([k])=>addonData[k].name).join(', ') || 'Nenhum',
