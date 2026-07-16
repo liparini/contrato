@@ -273,27 +273,30 @@ input::placeholder{color:#bbb}
           <div class="plan-badge promo">PROMOÇÃO</div>
           <div class="plan-name">Promocional</div>
           <div class="plan-price">R$497<small>/mês</small></div>
-          <div class="plan-features">Até 1 profissional<br>Seg–Sex, 8h–18h<br>Agendamentos e dúvidas</div>
+          <div class="plan-features">Até 1 profissional<br>Seg–Sex, 8h–18h<br>Agendamentos e dúvidas<br><small style="color:#b08900">Não inclui feriados</small></div>
         </div>
         <div class="plan-opt" id="planEssencial" onclick="selectPlan('essencial')">
           <div class="plan-name">Essencial</div>
           <div class="plan-price">R$1.397<small>/mês</small></div>
-          <div class="plan-features">Até 1 profissional<br>Seg–Sex, 8h–18h<br>Agendamentos e dúvidas</div>
+          <div class="plan-features">Até 1 profissional<br>Seg–Sex, 8h–18h<br>Agendamentos e dúvidas<br><small style="color:#b08900">Não inclui feriados</small></div>
         </div>
         <div class="plan-opt" id="planProfissional" onclick="selectPlan('profissional')">
           <div class="plan-badge">MAIS ESCOLHIDO</div>
           <div class="plan-name">Profissional</div>
           <div class="plan-price">R$1.797<small>/mês</small></div>
-          <div class="plan-features">Até 2 profissionais<br>Confirmações ativas<br>Triagem completa</div>
+          <div class="plan-features">Até 2 profissionais<br>Confirmações ativas<br>Triagem completa<br><small style="color:#b08900">Não inclui feriados</small></div>
         </div>
         <div class="plan-opt" id="planClinica" onclick="selectPlan('clinica')">
           <div class="plan-name">Clínica</div>
           <div class="plan-price">R$1.997<small>/mês</small></div>
-          <div class="plan-features">Até 3 profissionais<br>Reunião mensal<br>+ R$200/prof. adicional</div>
+          <div class="plan-features">Até 3 profissionais<br>Reunião mensal<br>+ R$200/prof. adicional<br><small style="color:#b08900">Não inclui feriados</small></div>
         </div>
       </div>
       <div id="setupInfo" style="display:none;background:var(--verde-bg);border:1px solid var(--verde-borda);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--verde);margin-top:4px">
         <strong>🔧 Taxa de setup (implantação): R$400</strong> — pagamento único, cobrado na ativação. Inclui onboarding e roteiro personalizado.
+      </div>
+      <div style="background:#FFF8E7;border:1px solid #E0B84D;border-radius:10px;padding:12px 16px;font-size:13px;color:#856404;margin-top:10px">
+        <strong>⚠️ Importante:</strong> feriados nacionais, estaduais e municipais não estão inclusos em nenhum plano. Não haverá atendimento nessas datas, mesmo para clínicas que contratarem o adicional de Sábados.
       </div>
     </div>
 
@@ -304,7 +307,7 @@ input::placeholder{color:#bbb}
         <div class="addon-opt" id="addonSabado" onclick="toggleAddon('sabado')">
           <div class="addon-check" id="checkSabado"></div>
           <div class="addon-name">Atendimento aos Sábados</div>
-          <div class="addon-desc">Cobertura de sábado das 8h às 18h, com o mesmo padrão de atendimento dos dias úteis.</div>
+          <div class="addon-desc">Cobertura de sábado das 8h às 18h, com o mesmo padrão de atendimento dos dias úteis. Não inclui feriados que caiam em sábado.</div>
           <div class="addon-price">+ R$ 400,00/mês</div>
         </div>
         <div class="addon-opt" id="addonConfirmacao" onclick="toggleAddon('confirmacao')">
@@ -598,6 +601,7 @@ function buildContract() {
 <ul>
 ${p.pros.map(s => `<li>${s}</li>`).join('')}
 </ul>
+<div class="highlight">⚠️ <strong>Feriados não inclusos:</strong> não haverá atendimento em feriados nacionais, estaduais ou municipais, em nenhum dos planos ou adicionais contratados, incluindo o adicional de Atendimento aos Sábados quando o feriado coincidir com um sábado.</div>
 
 <h3>CLÁUSULA 3 – DO PLANO E VALOR</h3>
 ${(()=>{
@@ -631,11 +635,12 @@ ${state.plan === 'promocional' ? `<div class="highlight">⚠️ <strong>Condiç�
 
 <h3>CLÁUSULA 6 – DAS OBRIGAÇÕES DA CONTRATADA</h3>
 <ul>
-<li>Realizar o atendimento de segunda a sexta-feira, das 8h às 18h, exceto feriados nacionais;</li>
+<li>Realizar o atendimento de segunda a sexta-feira, das 8h às 18h, <strong>exceto em feriados nacionais, estaduais e municipais</strong>, datas em que não haverá expediente;</li>
 <li>Manter sigilo absoluto sobre informações dos pacientes (LGPD – Lei 13.709/2018);</li>
 <li>Atender com a identidade e linguagem da clínica, conforme roteiro acordado;</li>
 <li>Encaminhar à equipe da clínica situações fora do escopo do roteiro;</li>
 </ul>
+<div class="highlight">📌 <strong>Feriados:</strong> nenhum plano ou adicional contratado (incluindo o adicional de Atendimento aos Sábados) inclui atendimento em feriados. Nessas datas, o serviço ficará suspenso, retomando normalmente no próximo dia útil.</div>
 
 <h3>CLÁUSULA 7 – DAS OBRIGAÇÕES DO CONTRATANTE</h3>
 <ul>
@@ -712,6 +717,9 @@ function buildSummary() {
         💳 1º pagamento: R$ ${(total+400).toLocaleString('pt-BR')},00 (mensal + taxa de ativação)<br>
         <span style="font-size:12px;font-weight:400;opacity:0.85">A partir do 2º mês: R$ ${total.toLocaleString('pt-BR')},00/mês</span>
       </div>
+    </div>
+    <div style="margin-top:10px;background:#FFF8E7;border:1px solid #E0B84D;border-radius:10px;padding:10px 14px;font-size:12px;color:#856404">
+      ⚠️ Feriados nacionais, estaduais e municipais não estão inclusos em nenhum plano ou adicional — não haverá atendimento nessas datas.
     </div>`;
 
   document.getElementById('summaryContent').innerHTML = `
